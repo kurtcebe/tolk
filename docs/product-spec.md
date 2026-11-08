@@ -74,7 +74,7 @@ Text goes to models running in the browser, never to a server of ours. Books and
 
 Two things can leave the machine, and the store listing must say so:
 
-- **Settings sync.** Settings in `chrome.storage.sync` follow the Chrome profile, so Chrome sends them to the reader's Google account. This covers settings only, never reading content or saved words.
+- **Settings sync.** Settings in `chrome.storage.sync` follow the Chrome profile, so Chrome sends them to the reader's Google account. This covers settings only, never reading content or saved words. A voice choice stays on its own computer and doesn't sync.
 - **Chrome's remote speech voices.** If a reader picks a voice Chrome marks as remote, Chrome sends the text to Google to be spoken. Local voices are the default, and the player says so when a remote one is chosen.
 
 Being exact here matters, because a privacy claim a reader can disprove is worse than a longer true one.

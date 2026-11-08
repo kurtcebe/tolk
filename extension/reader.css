@@ -84,7 +84,7 @@
   --line: #e0d9c9;
   --accent: #1f4e79;
   --on-accent: #ffffff;
-  --sentence-band: #eff1ec;
+  --sentence-band: #e5e9df;
   --current-word: #cfe0f1;
   --selection: #f2dfa8;
   --active-tool: #dce6f0;
@@ -99,7 +99,7 @@
   --line: #d8c8a9;
   --accent: #234b6e;
   --on-accent: #ffffff;
-  --sentence-band: #e8dfca;
+  --sentence-band: #e0d5bb;
   --current-word: #c4d3d6;
   --selection: #e9cd8c;
   --active-tool: #d5d8d0;
@@ -114,7 +114,7 @@
   --line: #3b3c41;
   --accent: #9cc2e8;
   --on-accent: #10202f;
-  --sentence-band: #25282d;
+  --sentence-band: #2d3138;
   --current-word: #385470;
   --selection: #6a5526;
   --active-tool: #2f3c4a;
@@ -129,7 +129,7 @@
   --line: #43454b;
   --accent: #8fb0cf;
   --on-accent: #12202d;
-  --sentence-band: #2b2e33;
+  --sentence-band: #363a41;
   --current-word: #3d5269;
   --selection: #5e4f2b;
   --active-tool: #36404b;
@@ -187,6 +187,29 @@ body {
 
 ::selection {
   background: var(--selection);
+}
+
+/* Read-along highlights only ever set a background, so they can't move text. */
+
+::highlight(tolk-sentence) {
+  background-color: var(--sentence-band);
+}
+
+::highlight(tolk-word) {
+  background-color: var(--current-word);
+}
+
+/* The hidden attribute has to win over any display rule on the same element. */
+[hidden] {
+  display: none !important;
+}
+
+svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 :focus-visible {
@@ -298,6 +321,13 @@ body {
   background: var(--active-tool);
 }
 
+.icon-button svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: auto;
+}
+
 .icon-button[aria-expanded="true"] {
   background: var(--active-tool);
   color: var(--accent);
@@ -351,6 +381,354 @@ body {
 .choice input:focus-visible + span {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+/* Player. A fixed overlay, so it can't move the text (invariant 5). This is the
+   bottom bar, used when the margin is too small for the docked panel further down.
+   It sits below the drawer, which covers it when open. */
+
+.player {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(660px, 100% - 2 * var(--gutter));
+  font-size: 13px;
+  transform: translateX(-50%);
+}
+
+.player-bar,
+.player-note {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
+}
+
+.player-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 12px;
+}
+
+.player-note {
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--muted);
+}
+
+.player-transport {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.player-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.player-button:hover {
+  background: var(--active-tool);
+}
+
+.player-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.player-button[aria-disabled="true"] {
+  background: transparent;
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.player-play {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.player-play:hover {
+  background: var(--accent);
+}
+
+.player-play[data-playing="true"] .icon-play,
+.player-play:not([data-playing="true"]) .icon-pause {
+  display: none;
+}
+
+.player-speed {
+  flex: 1;
+  min-width: 200px;
+}
+
+.speed-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.speed-slider-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+/* The mark for normal speed. It's at the centre of the track, which is exactly
+   where the thumb sits when the slider's value is 0. */
+.speed-slider-wrap::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 12px;
+  background: var(--muted);
+  transform: translate(-50%, -50%);
+}
+
+#speed-slider {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Keeps its height with or without Reset, so the bar doesn't change size. */
+.speed-status {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  min-height: 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.voice-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 180px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.voice-button:hover {
+  background: var(--active-tool);
+}
+
+.voice-button svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.voice-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#voice-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.voice-kind {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.voice-picker {
+  position: fixed;
+  inset: auto auto 112px 50%;
+  width: min(320px, 100vw - 2 * var(--gutter));
+  max-height: 50vh;
+  margin: 0;
+  padding: 8px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
+  font-size: 13px;
+  transform: translateX(-50%);
+}
+
+.voice-picker-note {
+  margin: 4px 8px 8px;
+  color: var(--muted);
+}
+
+.voice-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.voice-option:hover {
+  background: var(--active-tool);
+}
+
+.voice-option input {
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.voice-option-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-option-detail {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.back-button {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font: inherit;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
+  cursor: pointer;
+}
+
+.back-button:hover {
+  background: var(--active-tool);
+}
+
+/* Docked in the margin under the top-right controls, where it covers no text.
+   player.ts sets this only when the margin has room, because the column scales
+   with the text size. Its width has to stay in step with MARGIN_NEEDED_PX there. */
+
+:root[data-player-dock="margin"] .player {
+  top: 64px;
+  right: 16px;
+  bottom: auto;
+  left: auto;
+  width: 208px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  transform: none;
+}
+
+:root[data-player-dock="margin"] .player-bar {
+  position: relative;
+  gap: 12px;
+}
+
+:root[data-player-dock="margin"] .player-transport {
+  justify-content: center;
+  width: 100%;
+}
+
+:root[data-player-dock="margin"] #player-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+:root[data-player-dock="margin"] .player-speed {
+  flex-basis: 100%;
+  min-width: 0;
+}
+
+/* The slider takes the full width, with its end labels on the line below. */
+:root[data-player-dock="margin"] .speed-track {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+:root[data-player-dock="margin"] .speed-slider-wrap {
+  flex-basis: 100%;
+  order: -1;
+  padding-block: 4px;
+}
+
+:root[data-player-dock="margin"] .voice-button {
+  width: 100%;
+  max-width: none;
+}
+
+/* Last in the stack, so it appearing doesn't move the controls above it. */
+:root[data-player-dock="margin"] .back-button {
+  order: 1;
+  width: 100%;
+  border-radius: 12px;
+}
+
+.voice-button {
+  anchor-name: --voice-button;
+}
+
+:root[data-player-dock="margin"] .voice-picker {
+  position-anchor: --voice-button;
+  position-try-fallbacks: flip-block;
+  inset: auto;
+  top: anchor(bottom);
+  right: anchor(right);
+  width: 184px;
+  margin-top: 16px;
+  transform: none;
+}
+
+/* The voice button shortens to the name, then to an icon. */
+
+@media (max-width: 720px) {
+  .voice-kind {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .voice-text {
+    display: none;
+  }
 }
 
 /* Drawer */

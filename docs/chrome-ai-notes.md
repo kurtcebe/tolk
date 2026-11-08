@@ -17,6 +17,8 @@ Writer, Rewriter and Proofreader are still listed as developer trials, so don't 
 
 Chrome's status table says the Prompt API reached extensions in 138, while the prototype's earlier check of the extensions docs said 148. Detect support at runtime and don't hard-code a version. On 2026-11-08 the docs still disagreed: the Prompt API page says 138 for extensions, and the built-in APIs table says 148 while its own text says 138.
 
+The Proofreader API disagrees with itself too: on 2026-11-08 the built-in APIs page's text called it an origin trial, while its table said developer trial. Neither changes the advice above.
+
 ## Languages
 
 The Prompt API and Summarizer docs list only `en`, `ja`, `es`, `de` and `fr`, with more in development. On a Chrome build tested 2026-08-13, `create()` without `expectedOutputs` also warned: *"Please specify a supported output language code: [de, en, es, fr, ja]."*

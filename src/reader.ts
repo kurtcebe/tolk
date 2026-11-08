@@ -1,8 +1,13 @@
 import { mountModeSwitch, requireElement } from "./controls.js";
 import { mountDrawer } from "./drawer.js";
+import { mountHighlights } from "./highlight.js";
+import { initPlayback } from "./playback.js";
+import { mountPlayer } from "./player.js";
 import { renderChapter } from "./render.js";
 import { SAMPLE_DOCUMENT } from "./sample.js";
+import { mountShortcuts } from "./shortcuts.js";
 import { loadSettings, subscribe, type Scheme, type Settings } from "./state.js";
+import { indexChapter } from "./tokenize.js";
 
 const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
 let currentScheme: Scheme = "auto";
@@ -57,6 +62,15 @@ function showDocument(): void {
   }
   document.title = SAMPLE_DOCUMENT.title;
   renderChapter(SAMPLE_DOCUMENT, chapter, reader);
+  mountReadAlong(reader);
   // Starts layout, which starts loading the fonts document.fonts.ready waits for.
   reader.getBoundingClientRect();
+}
+
+function mountReadAlong(reader: HTMLElement): void {
+  const { language } = SAMPLE_DOCUMENT;
+  initPlayback(indexChapter(reader, language), language);
+  mountHighlights();
+  mountPlayer(language);
+  mountShortcuts();
 }

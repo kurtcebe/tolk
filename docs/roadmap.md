@@ -16,7 +16,7 @@ The TypeScript setup (`tsc` in strict mode, with dev-only type packages such as 
 
 ## M2: Read-along
 
-Tokenizer, sentence segmentation, word index, highlighting, click-to-seek, keep-in-view scrolling that yields to manual scrolling, voice handling with local and remote voices, and the speed slider. This is the hardest milestone and everything sits on it.
+Tokenizer, sentence segmentation, word index, highlighting, click-to-seek, keep-in-view scrolling that yields to manual scrolling, voice handling with local and remote voices, and the speed slider. This is the hardest milestone and everything sits on it. Read this paragraph and Hear wait for M4, where the margin tools and popup arrive, and playing on into the next chapter waits for M7, the first source with more than one.
 
 **Verify:** a 2000-word Dutch text stays aligned from start to end at the slowest and fastest speeds on the slider and at normal speed, through pausing, seeking and changing speed during playback. Test at least two local voices and one remote voice, including one that reports no word positions and falls back to the sentence highlight. Switching between Book and Learner with the player in place still moves no text. M1 can't fully test this, because the tools the modes show and hide don't exist yet.
 
@@ -28,7 +28,7 @@ The capability layer, its four states per language, the first-run L1 prompt, and
 
 ## M4: Translate and saved words
 
-Translate with interlinear lines, saving a word or phrase with its translation, context sentence and source to a list, and exporting that list as a TSV for Anki.
+Translate with interlinear lines, saving a word or phrase with its translation, context sentence and source to a list, and exporting that list as a TSV for Anki. Also the margin tools' Read this paragraph and the popup's Hear, both moved from M2.
 
 **Verify:** interlinear pairing holds in a narrow window, a forced bad output fails visibly, a late result never lands in the wrong popup, saved words survive a browser restart, and an export imports cleanly into Anki.
 
@@ -42,7 +42,7 @@ Content script extraction with a freshly vendored Readability, and the handoff i
 
 ## M7: EPUB and library
 
-Import, sanitising, chapter rendering, navigation, reading position, and the library view.
+Import, sanitising, chapter rendering, navigation, reading position, and the library view. Also playback continuing into the next chapter, moved from M2.
 
 **Verify:** several real EPUBs including an older line-wrapped book, a large book, and one with remote references, with no network requests in DevTools. A DRM-protected file gets a clear message.
 

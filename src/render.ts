@@ -38,6 +38,8 @@ export function renderChapter(
 ): void {
   const title = document.createElement("h1");
   title.textContent = chapter.title;
+  // The title gets read aloud, so it's indexed like a block. The byline isn't.
+  title.dataset["blockId"] = `${chapter.id}:title`;
   container.append(title);
 
   if (document_.author !== null) {

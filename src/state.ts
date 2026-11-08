@@ -13,12 +13,22 @@ export type Font = (typeof FONTS)[number];
 export type LineSpacing = (typeof LINE_SPACINGS)[number];
 export type TextSize = (typeof TEXT_SIZES)[number];
 
+/** The lowest and highest `rate` the slider offers. 0.1 is the API's minimum. */
+export const MIN_RATE = 0.1;
+export const MAX_RATE = 2;
+
+/** Remembered per language, because voices respond differently per language. */
+export interface SpeechPreference {
+  rate: number;
+}
+
 export interface Settings {
   mode: Mode;
   scheme: Scheme;
   font: Font;
   textSize: TextSize;
   lineSpacing: LineSpacing;
+  speech: Record<string, SpeechPreference>;
 }
 
 type Listener = (settings: Settings) => void;
@@ -31,7 +41,16 @@ const DEFAULTS: Settings = {
   font: "literata",
   textSize: 20,
   lineSpacing: "normal",
+  speech: {},
 };
+
+const DEFAULT_SPEECH: SpeechPreference = { rate: 1 };
+
+// A voice choice stays on this computer instead of syncing. Voices belong to the
+// machine, and picking a remote voice here must not start sending text to Google
+// from another computer where nobody picked it (invariant 6).
+const VOICE_CHOICES_KEY = "voiceChoices";
+let voiceChoices: Record<string, string> = {};
 
 // Storage echoes a page's own writes back to it. Without this tag, a slow echo
 // of an older value could undo a newer change, such as during fast stepper
@@ -62,9 +81,74 @@ export function updateSettings(change: Partial<Settings>): void {
   void saveSettings();
 }
 
+export function getSpeechPreference(language: string | null): SpeechPreference {
+  return current.speech[speechKey(language)] ?? DEFAULT_SPEECH;
+}
+
+export function updateSpeechPreference(
+  language: string | null,
+  change: Partial<SpeechPreference>,
+): void {
+  const key = speechKey(language);
+  updateSettings({
+    speech: {
+      ...current.speech,
+      [key]: { ...getSpeechPreference(language), ...change },
+    },
+  });
+}
+
+/** The voice picked on this computer for a language, or null if none was. */
+export function getVoiceChoice(language: string | null): string | null {
+  return voiceChoices[speechKey(language)] ?? null;
+}
+
+export function saveVoiceChoice(language: string | null, voiceURI: string): void {
+  voiceChoices = { ...voiceChoices, [speechKey(language)]: voiceURI };
+  void writeVoiceChoices();
+}
+
+async function writeVoiceChoices(): Promise<void> {
+  try {
+    await chrome.storage.local.set({ [VOICE_CHOICES_KEY]: voiceChoices });
+  } catch (error) {
+    // The choice still applies to this page, so reading isn't interrupted.
+    console.warn("Couldn't save the voice choice.", error);
+  }
+}
+
+async function loadVoiceChoices(): Promise<void> {
+  try {
+    const stored: Record<string, unknown> =
+      await chrome.storage.local.get(VOICE_CHOICES_KEY);
+    voiceChoices = parseVoiceChoices(stored[VOICE_CHOICES_KEY]);
+  } catch (error) {
+    console.warn("Couldn't load voice choices, using the default voice.", error);
+  }
+}
+
+function parseVoiceChoices(stored: unknown): Record<string, string> {
+  if (!isRecord(stored)) {
+    return {};
+  }
+  const choices: Record<string, string> = {};
+  for (const [language, voiceURI] of Object.entries(stored)) {
+    if (typeof voiceURI === "string") {
+      choices[language] = voiceURI;
+    }
+  }
+  return choices;
+}
+
+/** "nl-BE" and "nl" share a preference, because they share the same voices. */
+function speechKey(language: string | null): string {
+  return language?.split("-")[0]?.toLowerCase() ?? "unknown";
+}
+
 /** Loads saved settings. If storage fails, the reader still opens with defaults. */
 export async function loadSettings(): Promise<void> {
   chrome.storage.sync.onChanged.addListener(handleStorageChange);
+  await loadVoiceChoices();
   try {
     const stored: Record<string, unknown> =
       await chrome.storage.sync.get(STORAGE_KEY);
@@ -124,7 +208,27 @@ function parseSettings(stored: unknown): Settings {
       stored["lineSpacing"],
       DEFAULTS.lineSpacing,
     ),
+    speech: parseSpeech(stored["speech"]),
   };
+}
+
+function parseSpeech(stored: unknown): Record<string, SpeechPreference> {
+  if (!isRecord(stored)) {
+    return {};
+  }
+  const speech: Record<string, SpeechPreference> = {};
+  for (const [language, preference] of Object.entries(stored)) {
+    if (isRecord(preference)) {
+      speech[language] = { rate: parseRate(preference["rate"]) };
+    }
+  }
+  return speech;
+}
+
+function parseRate(stored: unknown): number {
+  return typeof stored === "number" && stored >= MIN_RATE && stored <= MAX_RATE
+    ? stored
+    : DEFAULT_SPEECH.rate;
 }
 
 function pick<T extends string | number>(

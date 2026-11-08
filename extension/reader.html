@@ -89,6 +89,111 @@
       </fieldset>
     </aside>
 
+    <div id="player" class="player" role="region" aria-label="Read aloud" hidden>
+      <button id="back-to-position" class="back-button" type="button" hidden>
+        Back to reading position
+      </button>
+      <div id="player-bar" class="player-bar">
+        <div class="player-transport">
+          <button
+            id="player-previous"
+            class="player-button"
+            type="button"
+            aria-label="Previous sentence"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M5 4v12M15 4.5 7.5 10l7.5 5.5z" />
+            </svg>
+          </button>
+          <button
+            id="player-play"
+            class="player-button player-play"
+            type="button"
+            aria-label="Play"
+          >
+            <svg class="icon-play" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M6 4l10 6-10 6z" />
+            </svg>
+            <svg class="icon-pause" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M7 4v12M13 4v12" />
+            </svg>
+          </button>
+          <button
+            id="player-next"
+            class="player-button"
+            type="button"
+            aria-label="Next sentence"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M15 4v12M5 4.5 12.5 10 5 15.5z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="player-speed">
+          <div class="speed-track">
+            <span aria-hidden="true">Slower</span>
+            <span class="speed-slider-wrap">
+              <input
+                id="speed-slider"
+                type="range"
+                min="-100"
+                max="100"
+                step="1"
+                value="0"
+                aria-label="Reading speed"
+              />
+            </span>
+            <span aria-hidden="true">Faster</span>
+          </div>
+          <div class="speed-status">
+            <output id="speed-label" for="speed-slider">Normal speed</output>
+            <button id="speed-reset" class="link-button" type="button" hidden>
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <button
+          id="voice-button"
+          class="voice-button"
+          type="button"
+          popovertarget="voice-picker"
+          aria-label="Choose a voice"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path
+              d="M3 8v4h3l4 3.5v-11L6 8zM13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10"
+            />
+          </svg>
+          <span class="voice-text">
+            <span id="voice-name"></span>
+            <span id="voice-kind" class="voice-kind"></span>
+          </span>
+        </button>
+
+        <button
+          id="player-close"
+          class="player-button"
+          type="button"
+          aria-label="Close the player"
+          hidden
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5 5l10 10M15 5 5 15" />
+          </svg>
+        </button>
+      </div>
+      <p id="player-note" class="player-note" role="status" hidden></p>
+    </div>
+
+    <div id="voice-picker" class="voice-picker" popover>
+      <p id="voice-picker-note" class="voice-picker-note" hidden>
+        This voice sends the text to Google to be spoken.
+      </p>
+      <div id="voice-list" role="radiogroup" aria-label="Voices"></div>
+    </div>
+
     <div class="top-controls">
       <fieldset class="mode-switch">
         <legend class="visually-hidden">Reading mode</legend>
@@ -103,6 +208,21 @@
           </label>
         </div>
       </fieldset>
+      <button
+        id="read-aloud-button"
+        class="icon-button"
+        type="button"
+        aria-label="Read aloud"
+        aria-expanded="false"
+        aria-controls="player"
+        hidden
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path
+            d="M3 8v4h3l4 3.5v-11L6 8zM13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10"
+          />
+        </svg>
+      </button>
       <button
         id="settings-button"
         class="icon-button"

@@ -55,7 +55,7 @@ One design that shows more or fewer tools. The modes never have separate styling
 
 ## Player
 
-A floating bar at the bottom of the window, 660 px wide, over the text rather than beside it.
+A narrow panel, 208 px wide, in the right margin under the top-right controls, where it covers no text. When the margin is too small for it, because of the window width or a large text size, it becomes a floating bar at the bottom of the window, 660 px wide, over the text. Changing between the two moves no text.
 
 ### Highlighting
 
@@ -67,19 +67,24 @@ A floating bar at the bottom of the window, 660 px wide, over the text rather th
 
 A slider with fine steps, labelled Slower and Faster at its ends, with a mark at the centre.
 
+- The ends are `rate` 0.1, the API's minimum, and `rate` 2. Each half has its own scale, so the centre stays at normal.
 - The centre mark is the voice's normal speed, `rate` 1.
 - A label under the slider reads "Normal speed", "Slower than normal" or "Faster than normal". Away from normal, it adds Reset, and clicking it returns to normal.
 - **No percentages or multipliers.** `rate` isn't the true speed and differs by voice, so "normal" is the only point we can promise.
 - The slider snaps to normal nearby. The snap zone covers the range where local voices don't change speed at all, about `rate` 0.95 to 1.02 on the Mac we tested, so the label doesn't say "slower" while the voice sounds the same.
 - Changing speed during playback restarts from the current position, because `rate` is fixed per utterance.
 
-Speed and voice are remembered per language.
+Speed and voice are remembered per language. Speed follows the Chrome profile, while a voice choice stays on the computer where it was made, so picking a remote voice on one computer can't start sending text to Google from another.
 
 ### Voices
 
 - A local voice is the default.
-- The voice picker shows each voice as local or remote, and says when a voice highlights the sentence only.
+- The voice picker shows each voice as local or remote, and says when a voice highlights the sentence only. That's only known once a voice has spoken, so it appears after the first use in a session.
 - With a remote voice chosen, the player says: "This voice sends the text to Google to be spoken." If it reports no word positions, it adds that only the sentence is highlighted.
+
+### What gets read
+
+The chapter title and every block are read aloud. The byline isn't.
 
 ### Seeking
 
@@ -244,7 +249,7 @@ Light, Sepia, Dark and Dim. It follows the system's light or dark setting until 
 | Line | `#E0D9C9` | `#D8C8A9` | `#3B3C41` | `#43454B` |
 | Accent | `#1F4E79` | `#234B6E` | `#9CC2E8` | `#8FB0CF` |
 | On accent | `#FFFFFF` | `#FFFFFF` | `#10202F` | `#12202D` |
-| Sentence band | `#EFF1EC` | `#E8DFCA` | `#25282D` | `#2B2E33` |
+| Sentence band | `#E5E9DF` | `#E0D5BB` | `#2D3138` | `#363A41` |
 | Current word | `#CFE0F1` | `#C4D3D6` | `#385470` | `#3D5269` |
 | Selection | `#F2DFA8` | `#E9CD8C` | `#6A5526` | `#5E4F2B` |
 | Active tool | `#DCE6F0` | `#D5D8D0` | `#2F3C4A` | `#36404B` |
@@ -268,7 +273,7 @@ Shortcuts apply on the reader page only and don't fire while typing in a field. 
 
 - Below the width where the margin fits the tools, they collapse into one overflow control at the paragraph's top-left, which still doesn't move the text.
 - The column shrinks to fit, with a 16 px gutter.
-- The player's voice button shortens to the voice name, then to an icon.
+- The player moves from the margin to the bottom of the window, and its voice button shortens to the voice name, then to an icon.
 - The drawer covers the text rather than pushing it.
 
 ## Long selections

@@ -35,6 +35,7 @@ A block's `html` is untrusted, whatever its source. `render.ts` parses it in an 
 - **Books:** IndexedDB, as original file blobs plus parsed metadata and reading position. Needs the `unlimitedStorage` permission. `localStorage` is too small and only holds strings.
 - **Saved words:** IndexedDB, so they stay local.
 - **Settings:** `chrome.storage.sync`.
+- **Voice choices:** `chrome.storage.local`, so a remote voice picked on one computer never applies on another.
 - **Model output:** in memory only. Don't persist it.
 
 ## EPUB
@@ -66,7 +67,8 @@ At render, each block is tokenized. Every word becomes `<span class="w" data-w="
 Rules learned the hard way:
 
 - **Build `text` and the offsets in one pass from the same source.** Reconstructing the utterance separately makes them drift on non-breaking spaces, soft hyphens and collapsed whitespace, and the highlight ends up one word off, two paragraphs in.
-- **Don't normalise `text`.** It's the exact concatenation of the block's text nodes.
+- **Don't normalise `text`.** It's the exact concatenation of the block's text nodes, plus a `\n` for each `<br>`, so the words on either side of a break don't run together when spoken.
+- **Word numbers are per block.** `data-w` restarts at 0 in each block, so re-tokenizing one block can't renumber any other.
 - **Segment sentences on a stand-in copy with each `\n` replaced by a space.** `Intl.Segmenter` forces a break after any bare line feed, which fragments text converted from line-wrapped sources. This is common in EPUBs of older books. The copy has the same length, so offsets still line up.
 - **Speak one utterance per sentence, not per block.** Chrome stalls on long utterances, and stepping by sentence is simpler. Map `charIndex` back with the sentence's base offset.
 - **Resolve boundaries by binary search** over `words`.
@@ -77,6 +79,10 @@ Rules learned the hard way:
 Boundary events aren't reliable across voices. If no boundary fires for longer than a plausible word duration, treat that voice as reporting no word positions for the session and fall back to the sentence highlight, which stays exact. Interpolating the word position on a timer was tested on real Dutch articles and doesn't hold sync, so it isn't the fallback.
 
 Resolve the voice before speech can start, not after the voice list arrives, or the first utterance can use the wrong one.
+
+Every restart, whether from pausing, seeking or changing speed or voice, cancels the utterance and starts a new one from the current position. `pause()` can cancel instead of pausing on some platforms, so it isn't used, and each utterance's events carry a generation number so a cancelled one can't move anything. A voice that reports words resumes from the current word. One that doesn't restarts its sentence.
+
+An engine can also go quiet without an event. A watchdog retries an utterance that never starts, then fails visibly, and moves on from one that stops or runs far past its expected length.
 
 ## Block mutation
 
