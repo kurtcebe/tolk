@@ -10,9 +10,9 @@ Run a throwaway capability test in real Chrome for Dutch, covering the Prompt AP
 
 ## M1: Document model and reader
 
-The TypeScript setup (`tsc` in strict mode, with dev-only type packages such as `@types/chrome` and `@types/dom-chromium-ai`), extension skeleton, `Document` model and reader page with typography controls, using a bundled sample document as the source. A fresh project, with no upstream code.
+The TypeScript setup (`tsc` in strict mode, with dev-only type packages such as `@types/chrome` and `@types/dom-chromium-ai`), extension skeleton, `Document` model and reader page with typography controls, colour schemes and Book and Learner modes, using a bundled sample document as the source. A fresh project, with no upstream code.
 
-**Verify:** `npx tsc` compiles with no errors, and the extension loads from `extension/`. The sample reads well at different widths, with every setting working and no reflow from controls.
+**Verify:** `npx tsc` compiles with no errors, and the extension loads from `extension/`. The sample reads well at different widths and in every colour scheme, with every setting working, no reflow from controls, and no text movement when switching modes.
 
 ## M2: Read-along
 
@@ -28,9 +28,9 @@ The capability layer, its four states per language, the first-run L1 prompt, and
 
 ## M4: Translate and saved words
 
-Translate with interlinear lines, and saving a word or phrase with its translation, context sentence and source to a list.
+Translate with interlinear lines, saving a word or phrase with its translation, context sentence and source to a list, and exporting that list as a TSV for Anki.
 
-**Verify:** interlinear pairing holds in a narrow window, a forced bad output fails visibly, a late result never lands in the wrong popup, and saved words survive a browser restart.
+**Verify:** interlinear pairing holds in a narrow window, a forced bad output fails visibly, a late result never lands in the wrong popup, saved words survive a browser restart, and an export imports cleanly into Anki.
 
 M5 moved to after v1. The later milestones keep their numbers so existing references stay valid.
 
@@ -54,4 +54,4 @@ Simplify, Explain, word cards, Read it back to me, recaps, chapter checks, and p
 
 **Explain. Verify:** a forced bad output fails visibly, and a late result never lands in the wrong popup.
 
-**M5: Word cards** adds structured word data to saved words, and export for Anki. **Verify:** dictionary form and gender on a set of Dutch words checked by hand, with wrong answers visible and correctable. An export imports cleanly into Anki.
+**M5: Word cards** adds structured word data to saved words and to the Anki export. **Verify:** dictionary form and gender on a set of Dutch words checked by hand, with wrong answers visible and correctable. An export with the new fields imports cleanly into Anki.

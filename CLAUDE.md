@@ -7,6 +7,7 @@ A Chrome extension for reading live web pages and EPUB books in the language you
 | File | What it settles |
 | --- | --- |
 | `docs/product-spec.md` | Who it's for, v1 scope, privacy |
+| `docs/ui-ux-spec.md` | Every surface, state and interaction, plus the visual identity |
 | `docs/architecture.md` | The source pipeline, document model and word index |
 | `docs/chrome-ai-notes.md` | Built-in AI APIs, per-language limits and known failures |
 | `docs/roadmap.md` | Milestones in dependency order |

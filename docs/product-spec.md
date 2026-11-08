@@ -25,7 +25,9 @@ Books live only in this browser profile, and uninstalling the extension deletes 
 
 Familiar reader conventions, such as font, size, spacing, theme and player controls, with its own visual identity. Don't copy Chrome's icons, artwork or exact styling, and don't use "Chrome" or "Google" in the name or imply endorsement.
 
-The detailed interaction design is still to be decided. See the roadmap.
+Two modes show more or fewer tools over the same text: Book, which is close to a plain page, and Learner, the default. There are four colour schemes: Light, Sepia, Dark and a lower-contrast Dim.
+
+`ui-ux-spec.md` has the detailed design.
 
 ## v1 features
 
@@ -35,7 +37,7 @@ Readers choose from the local and remote voices Chrome offers for the language. 
 
 **Translate.** An L1 translation of a word, phrase or paragraph. The original stays visible. Paragraphs are interlinear, with an L1 line under each L2 sentence.
 
-**Saved words.** A reader can save a selected word or phrase with its translation, context sentence and source, and see them in a list. It uses Translate only, with no dictionary form, gender or AI-written definition. Keeping the sentence matters because a word translated on its own can get the wrong sense.
+**Saved words.** A reader can save a selected word or phrase with its translation, context sentence and source, see them in a list, and export them as a TSV that Anki can import. It uses Translate only, with no dictionary form, gender or AI-written definition. If translation isn't available, the word still saves with the translation blank. Keeping the sentence matters because a word translated on its own can get the wrong sense.
 
 If L2 equals L1, the tools that produce L1 output hide. Read-along stays available.
 
@@ -49,7 +51,7 @@ In order:
 
 1. **Simplify.** Rewrites text in easier L2 and stays in L2. At paragraph scope it replaces the text in place and can be reverted. At word or phrase scope it's informational and leaves the text untouched. The target difficulty is a free-form instruction with a few starter phrasings, not a CEFR level.
 2. **Explain.** For a paragraph, what a confusing construction means and why it's shaped that way, answered in L1.
-3. **Word cards.** Selecting a word returns its dictionary form, part of speech, gender where relevant, and a definition based on that sentence, using structured output. Cards extend saved words and can be exported for Anki. The reader must be able to see or correct uncertain fields, because a confidently wrong gender is the main risk.
+3. **Word cards.** Selecting a word returns its dictionary form, part of speech, gender where relevant, and a definition based on that sentence, using structured output. Cards extend saved words and add these fields to the Anki export. The reader must be able to see or correct uncertain fields, because a confidently wrong gender is the main risk.
 4. **Read it back to me.** The learner reads a sentence aloud using local speech recognition, and we mark each word against the word index. This is the signature feature. It checks whether you can be understood, not your accent. Chrome has no local Dutch speech pack yet, so it can't run for Dutch until one ships.
 5. **"Previously…" recaps** when reopening a book, in the book's language.
 6. **Chapter checks.** A few comprehension questions at the end of a chapter.
