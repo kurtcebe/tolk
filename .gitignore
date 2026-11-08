@@ -10,3 +10,6 @@ CLAUDE.local.md
 
 # Link to private tickets. No trailing slash: "tickets/" would not match a symlink.
 /tickets
+
+# Compiled TypeScript
+extension/js/

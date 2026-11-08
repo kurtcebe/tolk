@@ -34,8 +34,10 @@ Breaking one is a bug even if everything appears to work.
 
 ## Conventions
 
-- Manifest V3 with plain ES modules and no build step, so the unpacked extension is the source. Ask before introducing a bundler or dependency.
-- Vanilla JS with no framework.
+- Manifest V3 with native ES modules. No bundler: the only build step is `tsc`.
+- TypeScript in strict mode, with no framework. Source is in `src/`, and `tsc` compiles it to `extension/js/`, which is gitignored. Manifest, HTML and CSS live in `extension/`.
+- Ask before adding a dependency. Dev-only type packages are fine; anything shipped in the extension counts.
+- Avoid `any`. At an API or file boundary, take `unknown` and narrow it. AI output and EPUB content stay untrusted even when typed, because a type is not a runtime check.
 - `async`/`await` throughout, no `.then()` chains.
 - Prefer a small function that does one thing over an options object.
 - Vendored third-party files keep their licence notices and are listed in `docs/third-party.md`.
@@ -50,11 +52,14 @@ Breaking one is a bug even if everything appears to work.
 
 ## Commands
 
-There's no test runner or build yet.
+There's no test runner yet. The TypeScript setup arrives in M1.
 
 ```
+# compile, and recompile on save
+npx tsc --watch
+
 # load unpacked
-chrome://extensions → Developer mode → Load unpacked → select the repo root
+chrome://extensions → Developer mode → Load unpacked → select extension/
 
 # see what the local models can do on this machine
 chrome://on-device-internals

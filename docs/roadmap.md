@@ -10,9 +10,9 @@ Run a throwaway capability test in real Chrome for Dutch, covering the Prompt AP
 
 ## M1: Document model and reader
 
-The extension skeleton, `Document` model and reader page with typography controls, using a bundled sample document as the source. A fresh project, with no upstream code.
+The TypeScript setup (`tsc` in strict mode, with dev-only type packages such as `@types/chrome` and `@types/dom-chromium-ai`), extension skeleton, `Document` model and reader page with typography controls, using a bundled sample document as the source. A fresh project, with no upstream code.
 
-**Verify:** the sample reads well at different widths, with every setting working and no reflow from controls.
+**Verify:** `npx tsc` compiles with no errors, and the extension loads from `extension/`. The sample reads well at different widths, with every setting working and no reflow from controls.
 
 ## M2: Read-along
 
