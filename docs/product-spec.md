@@ -1,0 +1,75 @@
+# Product spec
+
+## Who it's for
+
+Someone at roughly A2–B2 who can read authentic text in their target language, but slowly and with gaps. They don't want a graded-reader app with curated content. They want to read the thing they actually wanted to read.
+
+The failure we're designing against: a reader opens an article or book, hits three unknown words in the first paragraph, and switches to the English version. Every feature exists to keep them in L2 for one more paragraph.
+
+The first target language is Dutch, but nothing is Dutch-specific. Dutch is also a useful test case because it sits outside Chrome's officially supported Prompt API languages. See `chrome-ai-notes.md`.
+
+## Sources
+
+- **Live page:** the current tab's article, extracted into the reader.
+- **EPUB:** imported by file picker or drag and drop, then stored in the browser. DRM-protected files can't be read and get a clear message.
+
+PDF is out of scope.
+
+## Library
+
+A simple grid of imported books showing cover, title, author and progress. Readers can import, delete, and resume where they left off. Live pages aren't saved to the library.
+
+Books live only in this browser profile, and uninstalling the extension deletes them. The UI has to say so.
+
+## Reader
+
+Familiar reader conventions, such as font, size, spacing, theme and player controls, with its own visual identity. Don't copy Chrome's icons, artwork or exact styling, and don't use "Chrome" or "Google" in the name or imply endorsement.
+
+The detailed interaction design is still to be decided. See the roadmap.
+
+## v1 features
+
+**Read-along.** Speech synthesis with word and sentence highlighting. Slow playback is a core learner control. Clicking a word seeks during playback, and selecting a word or phrase plays just that selection.
+
+**Translate.** An L1 translation of a word, phrase or paragraph. The original stays visible. Paragraphs are interlinear, with an L1 line under each L2 sentence.
+
+**Simplify.** Rewrites text in easier L2 and stays in L2. At paragraph scope it replaces the text in place and can be reverted. At word or phrase scope it's informational and leaves the text untouched. The target difficulty is a free-form instruction with a few starter phrasings, not a CEFR level.
+
+**Explain.** For a paragraph, what a confusing construction means and why it's shaped that way, answered in L1.
+
+**Word cards.** Selecting a word returns its dictionary form, part of speech, gender where relevant, and a definition based on that sentence, using structured output. Cards can be saved with their context sentence and source, and exported for Anki. The reader must be able to see or correct uncertain fields, because a confidently wrong gender is the main risk.
+
+If L2 equals L1, the tools that produce L1 output hide. Simplify and Read-along stay available.
+
+Every feature is checked per language. When one can't run for the current language, the reader says so plainly and the rest keeps working.
+
+## After v1
+
+In order:
+
+1. **Read it back to me.** The learner reads a sentence aloud using local speech recognition, and we mark each word against the word index. This is the signature feature. It checks whether you can be understood, not your accent.
+2. **"Previously…" recaps** when reopening a book, in the book's language.
+3. **Chapter checks.** A few comprehension questions at the end of a chapter.
+4. **Describe this picture.** A simple L2 description of an EPUB illustration.
+
+## Not planned
+
+- PDF.
+- Spaced repetition. Export to Anki, which does it better.
+- Mobile. The built-in AI APIs are desktop-only.
+- Cloud model fallback. It would make this a different product with a different privacy story.
+
+## What success looks like
+
+A reader finishes an article or chapter they would otherwise have abandoned, and ends with four or five words saved. Using every feature isn't the goal.
+
+## Privacy
+
+Text goes to models running in the browser, never to a server of ours. Books and saved words stay on the machine. There are no analytics, telemetry or crash reports.
+
+Two things can leave the machine, and the store listing must say so:
+
+- **Settings sync.** Settings in `chrome.storage.sync` follow the Chrome profile, so Chrome sends them to the reader's Google account. This covers settings only, never reading content or saved words.
+- **Chrome's remote speech voices.** If a reader picks a voice Chrome marks as remote, Chrome sends the text to Google to be spoken. Local voices are the default, and the player says so when a remote one is chosen.
+
+Being exact here matters, because a privacy claim a reader can disprove is worse than a longer true one.
