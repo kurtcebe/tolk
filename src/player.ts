@@ -174,9 +174,22 @@ function renderVoiceButton(): void {
 
 function renderNote(noVoices: boolean): void {
   const note = requireElement("player-note");
-  const text = noVoices ? `No voice for ${languageName()} on this device.` : noteForVoice();
+  if (noVoices) {
+    note.replaceChildren(`No voice for ${languageName()} on this device. `, addVoiceLink());
+    note.hidden = false;
+    return;
+  }
+  const text = noteForVoice();
   note.textContent = text;
   note.hidden = text === "";
+}
+
+function addVoiceLink(): HTMLAnchorElement {
+  const link = document.createElement("a");
+  link.href = "help.html#voices";
+  link.target = "_blank";
+  link.textContent = "How to add a voice";
+  return link;
 }
 
 function noteForVoice(): string {

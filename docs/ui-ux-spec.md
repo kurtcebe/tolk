@@ -161,7 +161,7 @@ Import problems appear on the card with a Remove button, so a failure can't be m
 
 A 320 px panel from the right, over the page. It never resizes the text column, and it closes from the button that opened it.
 
-- **Settings (`Aa`):** colour scheme, font, text size, line spacing, language status, your own language and the library link.
+- **Settings (`Aa`):** colour scheme, font, text size, line spacing, language status, your own language, and the library and help links.
 - **Saved words (star):** see above.
 - **Contents (list icon, books only):** the chapter list, with the current chapter marked.
 
@@ -189,7 +189,7 @@ Every feature is checked per language, and translation per language pair (invari
 | --- | --- |
 | Local | Uses one by default |
 | Remote only | Doesn't start on its own. Play offers the voice, with the note that its text goes to Google, and it plays only if picked |
-| None | One line: "No voice for Dutch on this device." In Book mode, the read-aloud button is hidden |
+| None | One line: "No voice for Dutch on this device. How to add a voice", linking to the help page. In Book mode, the read-aloud button is hidden |
 
 ### Language detection
 
@@ -222,6 +222,12 @@ Translation and local voices run on this device.
 - It asks for L1 only, pre-filled from the browser's language, and it can be changed later in the drawer.
 - It never asks for L2, which is detected per document.
 - Model downloads are explained at the first click that needs one, not here.
+
+## Help
+
+A separate page in the same colour scheme, in English, covering what Tolk is, its features, keyboard shortcuts and privacy. It's reached from the settings drawer and from messages that need more explanation than fits on one line, such as having no voice. It opens in a new tab so the reader keeps their place, and it never opens by itself.
+
+It describes only what exists, so each milestone adds its own features.
 
 ## Visual identity
 

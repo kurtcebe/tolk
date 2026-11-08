@@ -1,3 +1,4 @@
+import { mountAppearance } from "./appearance.js";
 import { mountModeSwitch, requireElement } from "./controls.js";
 import { mountDrawer } from "./drawer.js";
 import { mountHighlights } from "./highlight.js";
@@ -6,19 +7,15 @@ import { mountPlayer } from "./player.js";
 import { renderChapter } from "./render.js";
 import { SAMPLE_DOCUMENT } from "./sample.js";
 import { mountShortcuts } from "./shortcuts.js";
-import { loadSettings, subscribe, type Scheme, type Settings } from "./state.js";
+import { loadSettings } from "./state.js";
 import { indexChapter } from "./tokenize.js";
-
-const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
-let currentScheme: Scheme = "auto";
 
 await start();
 
 async function start(): Promise<void> {
   try {
     await loadSettings();
-    subscribe(applySettings);
-    systemDark.addEventListener("change", applyCurrentScheme);
+    mountAppearance();
     mountModeSwitch();
     mountDrawer();
     showDocument();
@@ -28,27 +25,6 @@ async function start(): Promise<void> {
   } finally {
     document.documentElement.dataset["ready"] = "true";
   }
-}
-
-function applySettings(settings: Settings): void {
-  const root = document.documentElement;
-  root.dataset["mode"] = settings.mode;
-  root.dataset["font"] = settings.font;
-  root.dataset["lineSpacing"] = settings.lineSpacing;
-  root.style.setProperty("--text-size", `${settings.textSize}px`);
-  currentScheme = settings.scheme;
-  applyCurrentScheme();
-}
-
-function applyCurrentScheme(): void {
-  document.documentElement.dataset["scheme"] = resolveScheme(currentScheme);
-}
-
-function resolveScheme(scheme: Scheme): Exclude<Scheme, "auto"> {
-  if (scheme !== "auto") {
-    return scheme;
-  }
-  return systemDark.matches ? "dark" : "light";
 }
 
 function showDocument(): void {

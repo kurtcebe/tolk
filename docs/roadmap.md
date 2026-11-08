@@ -1,6 +1,6 @@
 # Roadmap
 
-Dependency order. Each milestone ends with a hand-check in the browser, so don't start the next until it passes.
+Dependency order. Each milestone ends with a hand-check in the browser, so don't start the next until it passes. A milestone that adds something a reader can see also adds it to the help page.
 
 ## M0: Capability test and design
 

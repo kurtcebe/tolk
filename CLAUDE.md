@@ -47,6 +47,7 @@ Breaking one is a bug even if everything appears to work.
 
 - Work milestones in order. Each ends with a hand-check in the browser, so don't start the next until it passes.
 - When a UI decision isn't settled by the specs, ask instead of picking.
+- Any change a reader can see updates `extension/help.html` in the same branch, including shortcuts, privacy and voices. It describes only what exists.
 - Verify AI API details against the current docs before writing calls, and record drift in `docs/chrome-ai-notes.md`.
 - Branch per task from an up-to-date `main`, and use one worktree per session so parallel sessions don't collide.
 - Task tracking is private. Commits may start with a key such as `TOLK-12:`, but each commit message must stand on its own.
