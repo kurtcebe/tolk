@@ -53,9 +53,12 @@ Breaking one is a bug even if everything appears to work.
 
 ## Commands
 
-There's no test runner yet. The TypeScript setup arrives in M1.
+There's no test runner yet.
 
 ```
+# install the dev tools
+npm install
+
 # compile, and recompile on save
 npx tsc --watch
 

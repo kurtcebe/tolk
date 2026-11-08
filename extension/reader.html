@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Tolk</title>
+    <link rel="stylesheet" href="reader.css" />
+    <script type="module" src="js/reader.js"></script>
+  </head>
+  <body>
+    <main id="reader" class="reader"></main>
+
+    <aside
+      id="settings-drawer"
+      class="drawer"
+      aria-label="Settings"
+      tabindex="-1"
+    >
+      <fieldset class="setting">
+        <legend>Colour</legend>
+        <div class="choices choices-swatches">
+          <label class="choice">
+            <input type="radio" name="scheme" value="auto" />
+            <span>Auto</span>
+          </label>
+          <label class="choice swatch" data-scheme="light">
+            <input type="radio" name="scheme" value="light" />
+            <span>Light</span>
+          </label>
+          <label class="choice swatch" data-scheme="sepia">
+            <input type="radio" name="scheme" value="sepia" />
+            <span>Sepia</span>
+          </label>
+          <label class="choice swatch" data-scheme="dark">
+            <input type="radio" name="scheme" value="dark" />
+            <span>Dark</span>
+          </label>
+          <label class="choice swatch" data-scheme="dim">
+            <input type="radio" name="scheme" value="dim" />
+            <span>Dim</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="setting">
+        <legend>Font</legend>
+        <div class="choices">
+          <label class="choice font-literata">
+            <input type="radio" name="font" value="literata" />
+            <span>Literata</span>
+          </label>
+          <label class="choice font-instrument">
+            <input type="radio" name="font" value="instrument" />
+            <span>Instrument Sans</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="setting" role="group" aria-labelledby="text-size-label">
+        <div id="text-size-label" class="setting-label">Text size</div>
+        <div class="stepper">
+          <button id="text-smaller" type="button" aria-label="Smaller text">
+            −
+          </button>
+          <output id="text-size-value" aria-live="polite"></output>
+          <button id="text-larger" type="button" aria-label="Larger text">
+            +
+          </button>
+        </div>
+      </div>
+
+      <fieldset class="setting">
+        <legend>Line spacing</legend>
+        <div class="choices">
+          <label class="choice">
+            <input type="radio" name="line-spacing" value="compact" />
+            <span>Compact</span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="line-spacing" value="normal" />
+            <span>Normal</span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="line-spacing" value="airy" />
+            <span>Airy</span>
+          </label>
+        </div>
+      </fieldset>
+    </aside>
+
+    <div class="top-controls">
+      <fieldset class="mode-switch">
+        <legend class="visually-hidden">Reading mode</legend>
+        <div class="choices">
+          <label class="choice">
+            <input type="radio" name="mode" value="book" />
+            <span>Book</span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="mode" value="learner" />
+            <span>Learner</span>
+          </label>
+        </div>
+      </fieldset>
+      <button
+        id="settings-button"
+        class="icon-button"
+        type="button"
+        aria-label="Settings"
+        aria-expanded="false"
+        aria-controls="settings-drawer"
+      >
+        Aa
+      </button>
+    </div>
+  </body>
+</html>

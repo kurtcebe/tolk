@@ -21,7 +21,8 @@ What Tolk v1 looks like and how it behaves. `product-spec.md` settles what's in 
 
 A full-page extension page with one centred column and nothing else at rest. There's no product name or heading in the reader.
 
-- **Column:** 640 px wide at the default text size.
+- **Column:** 640 px wide at the default text size. It scales with the text (32em), so the line length holds at every size.
+- **Top-right controls:** fixed in place while the text scrolls. They can sit over text in a narrow window.
 - **Text defaults:** 20 px with a line height of 1.65.
 - **Length:** one chapter at a time, in one continuous scroll. A live page counts as one chapter. There are no page turns.
 - **End of a chapter:** previous and next chapter links in a book, with enough space below the last line that the player never covers it.
@@ -225,14 +226,14 @@ Translation and local voices run on this device.
 
 - **Reading:** Literata. A reader can switch the text to Instrument Sans.
 - **Interface and interlinear text:** Instrument Sans.
-- **Text size:** 16 to 28 px, 20 by default.
+- **Text size:** 16 to 28 px, 20 by default, set with a − / + stepper in 2 px steps.
 - **Line spacing:** Compact 1.45, Normal 1.65, Airy 1.9.
 
 Fonts ship inside the extension and are listed in `third-party.md` (invariant 6).
 
 ### Colour
 
-Light, Sepia, Dark and Dim. It follows the system's light or dark setting until a reader picks a scheme. Dim is the lower-contrast dark option.
+Light, Sepia, Dark and Dim. It follows the system's light or dark setting until a reader picks a scheme, and an Auto option goes back to following it. Dim is the lower-contrast dark option.
 
 | Token | Light | Sepia | Dark | Dim |
 | --- | --- | --- | --- | --- |

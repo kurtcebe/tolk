@@ -18,7 +18,7 @@ The TypeScript setup (`tsc` in strict mode, with dev-only type packages such as 
 
 Tokenizer, sentence segmentation, word index, highlighting, click-to-seek, keep-in-view scrolling that yields to manual scrolling, voice handling with local and remote voices, and the speed slider. This is the hardest milestone and everything sits on it.
 
-**Verify:** a 2000-word Dutch text stays aligned from start to end at the slowest and fastest speeds on the slider and at normal speed, through pausing, seeking and changing speed during playback. Test at least two local voices and one remote voice, including one that reports no word positions and falls back to the sentence highlight.
+**Verify:** a 2000-word Dutch text stays aligned from start to end at the slowest and fastest speeds on the slider and at normal speed, through pausing, seeking and changing speed during playback. Test at least two local voices and one remote voice, including one that reports no word positions and falls back to the sentence highlight. Switching between Book and Learner with the player in place still moves no text. M1 can't fully test this, because the tools the modes show and hide don't exist yet.
 
 ## M3: Availability and languages
 

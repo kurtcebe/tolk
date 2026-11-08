@@ -10,16 +10,18 @@ Live page ── Readability ──────┐
 EPUB ──── unzip, parse, clean ─┘
 ```
 
-A source adapter's only job is producing a `Document`. Nothing downstream knows where the text came from.
+A source adapter's only job is producing a `Document`. Nothing downstream knows where the text came from. In code the type is `TolkDocument`, because `Document` would shadow the browser's own type.
 
 ```js
-Document = {
+TolkDocument = {
   id, source, title, author, language,
   chapters: [ { id, title, blocks: [ { id, type, html } ] } ],
 }
 ```
 
 A live page is a document with one chapter. The reader renders one chapter at a time, which keeps long books fast and the word index small.
+
+A block's `html` is untrusted, whatever its source. `render.ts` parses it in an inert `DOMParser` document and rebuilds it node by node from an allowlist, so it never goes through `innerHTML`. Links keep only absolute `http` and `https` URLs.
 
 ## Where the code runs
 

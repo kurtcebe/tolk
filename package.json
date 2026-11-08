@@ -1,0 +1,12 @@
+{
+  "name": "tolk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/chrome": "^0.3.7",
+    "@types/dom-chromium-ai": "^0.0.18",
+    "typescript": "^7.0.2"
+  }
+}
