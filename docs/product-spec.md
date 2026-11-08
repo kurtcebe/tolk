@@ -29,28 +29,31 @@ The detailed interaction design is still to be decided. See the roadmap.
 
 ## v1 features
 
-**Read-along.** Speech synthesis with word and sentence highlighting. Slow playback is a core learner control. Clicking a word seeks during playback, and selecting a word or phrase plays just that selection.
+**Read-along.** Speech synthesis with word and sentence highlighting. Slow playback is a core learner control. Speed is a slider with fine steps rather than a few fixed presets, so a reader can settle on the fastest speed they're comfortable with. Voices respond differently: on the Mac we tested, the remote voice follows 1% steps, while local voices move in larger jumps and can't go much below about 55% of normal speed. Clicking a word seeks during playback, and selecting a word or phrase plays just that selection.
+
+Readers choose from the local and remote voices Chrome offers for the language. A local voice is the default, and the player says so when a remote one is chosen, because its text goes to Google. A voice that doesn't report word positions highlights the current sentence only, and the voice picker says so.
 
 **Translate.** An L1 translation of a word, phrase or paragraph. The original stays visible. Paragraphs are interlinear, with an L1 line under each L2 sentence.
 
-**Simplify.** Rewrites text in easier L2 and stays in L2. At paragraph scope it replaces the text in place and can be reverted. At word or phrase scope it's informational and leaves the text untouched. The target difficulty is a free-form instruction with a few starter phrasings, not a CEFR level.
+**Saved words.** A reader can save a selected word or phrase with its translation, context sentence and source, and see them in a list. It uses Translate only, with no dictionary form, gender or AI-written definition. Keeping the sentence matters because a word translated on its own can get the wrong sense.
 
-**Explain.** For a paragraph, what a confusing construction means and why it's shaped that way, answered in L1.
-
-**Word cards.** Selecting a word returns its dictionary form, part of speech, gender where relevant, and a definition based on that sentence, using structured output. Cards can be saved with their context sentence and source, and exported for Anki. The reader must be able to see or correct uncertain fields, because a confidently wrong gender is the main risk.
-
-If L2 equals L1, the tools that produce L1 output hide. Simplify and Read-along stay available.
+If L2 equals L1, the tools that produce L1 output hide. Read-along stays available.
 
 Every feature is checked per language. When one can't run for the current language, the reader says so plainly and the rest keeps working.
 
 ## After v1
 
+Simplify, Explain and word cards moved here after the Dutch capability test showed the Prompt API isn't reliable enough for them yet. See `chrome-ai-notes.md`.
+
 In order:
 
-1. **Read it back to me.** The learner reads a sentence aloud using local speech recognition, and we mark each word against the word index. This is the signature feature. It checks whether you can be understood, not your accent.
-2. **"Previously…" recaps** when reopening a book, in the book's language.
-3. **Chapter checks.** A few comprehension questions at the end of a chapter.
-4. **Describe this picture.** A simple L2 description of an EPUB illustration.
+1. **Simplify.** Rewrites text in easier L2 and stays in L2. At paragraph scope it replaces the text in place and can be reverted. At word or phrase scope it's informational and leaves the text untouched. The target difficulty is a free-form instruction with a few starter phrasings, not a CEFR level.
+2. **Explain.** For a paragraph, what a confusing construction means and why it's shaped that way, answered in L1.
+3. **Word cards.** Selecting a word returns its dictionary form, part of speech, gender where relevant, and a definition based on that sentence, using structured output. Cards extend saved words and can be exported for Anki. The reader must be able to see or correct uncertain fields, because a confidently wrong gender is the main risk.
+4. **Read it back to me.** The learner reads a sentence aloud using local speech recognition, and we mark each word against the word index. This is the signature feature. It checks whether you can be understood, not your accent. Chrome has no local Dutch speech pack yet, so it can't run for Dutch until one ships.
+5. **"Previously…" recaps** when reopening a book, in the book's language.
+6. **Chapter checks.** A few comprehension questions at the end of a chapter.
+7. **Describe this picture.** A simple L2 description of an EPUB illustration.
 
 ## Not planned
 
