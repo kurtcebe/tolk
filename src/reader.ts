@@ -6,14 +6,19 @@ import { mountDrawer } from "./drawer.js";
 import { mountFirstRun } from "./first-run.js";
 import { mountHighlights } from "./highlight.js";
 import { mountLanguageStatus } from "./language-status.js";
+import { attachMarginTools, mountMarginTools } from "./margin-tools.js";
 import { initPlayback, replaceBlocks } from "./playback.js";
 import { mountPlayer } from "./player.js";
 import { renderChapter } from "./render.js";
 import { SAMPLE_DOCUMENT } from "./sample.js";
+import { mountSavedMarks, repaintSavedMarks } from "./saved-marks.js";
+import { mountSavedWords } from "./saved-words.js";
+import { loadSavedWords } from "./saved-words-store.js";
 import { mountShortcuts } from "./shortcuts.js";
 import { loadSettings } from "./state.js";
 import { indexChapter } from "./tokenize.js";
 import { loadVoices, refreshVoices } from "./voices.js";
+import { mountWordPopup } from "./word-popup.js";
 
 /** How long the page stays hidden for detection. Reading matters more than knowing the language. */
 const DETECTION_WAIT_MS = 1500;
@@ -47,6 +52,13 @@ function showDocument(): void {
   mountLanguageStatus();
   mountPlayer();
   mountShortcuts();
+  mountMarginTools();
+  mountWordPopup({ title: SAMPLE_DOCUMENT.title });
+  mountSavedWords();
+  mountSavedMarks();
+  // Not awaited, because a slow database mustn't hold up the text. Underlines
+  // only paint, so them arriving later can't move anything.
+  void loadSavedWords();
   // Starts layout, which starts loading the fonts document.fonts.ready waits for.
   reader.getBoundingClientRect();
 }
@@ -69,7 +81,9 @@ function showChapter(reader: HTMLElement): void {
   const blocks = indexChapter(fresh, language);
 
   replaceBlocks(blocks);
+  attachMarginTools(blocks);
   reader.replaceChildren(fresh);
+  repaintSavedMarks();
   // The one allowed exception to invariant 5: `lang` lets the font draw the
   // language's letters correctly, which re-wraps some lines for Turkish.
   if (language === null) {

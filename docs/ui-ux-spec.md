@@ -92,7 +92,10 @@ The chapter title and every block are read aloud. The byline isn't.
 - A drag or double-click is selecting, not seeking.
 - A click on a word inside a link follows the link.
 - Read this paragraph, from the margin tools, plays that one paragraph and stops at its end.
-- Hear, from the popup, plays only the selection and stops.
+- Hear, from the popup, plays only the selection and stops. It never scrolls the page.
+- Clicking either one again stops it early.
+- Either one interrupts a session under way, which then waits, paused, at the place it had reached. Seeking or stepping during them takes over from there instead.
+- With only remote voices, they offer a voice like Play does, opening the player in Book mode. With a remote voice already chosen in Book mode, the popup says the text goes to Google, since the player that normally says so is hidden. With no voices, or while the language is Unknown, they're hidden.
 
 ### Scrolling during playback
 
@@ -109,21 +112,33 @@ The chapter title and every block are read aloud. The byline isn't.
 
 Appears when a word or phrase is selected, anchored below the selection and flipping above it near the bottom of the window. It shows the selected text, its translation with no further click, Hear and Save.
 
-Dismissed by clicking away, Escape or changing the selection. A late result never lands in a newer popup.
+Dismissed by clicking away, Escape or changing the selection. A late result never lands in a newer popup. A partly selected word counts as the whole word. A dismissed selection doesn't reopen until it changes.
+
+- **Unknown language:** the selected text and "Choose the text's language to translate. [Choose]", with no Hear or Save.
+- **Failure:** "Couldn't translate this. [Try again]". Save still works, with the translation blank.
+- **Saving before the result:** the word saves straight away and gets its translation when it arrives, even if the popup has closed.
+- **Clicking inside it:** keeps the selection, which means the translation can't be selected and copied.
 
 ### Paragraph
 
 Translate in the margin tools gives interlinear lines, with an L1 line under each L2 sentence.
 
 - **Style:** the interface font at about 0.82em in the muted colour. No italics, since they hurt legibility at small sizes.
-- **Structure:** per sentence, so pairs hold when a sentence wraps.
-- **Toggle:** clicking Translate again removes the lines, and the L2 stays intact.
+- **Structure:** per sentence, so pairs hold when a sentence wraps. A sentence ending inside an inline element such as emphasis has its line straight after that element.
+- **Toggle:** clicking Translate again removes the lines, and the L2 stays intact. Clicking while it's still working cancels it.
+- **Timing:** all the lines appear together, so the text below moves once.
+- **Failure:** if every sentence fails, a note beside the tools says "Couldn't translate this paragraph. [Try again]" and the text doesn't move. If only some fail, each of those says "Couldn't translate this sentence." on its line.
+- **Changing your own language:** lines already showing stay as they are, and the next Translate uses the new language.
+
+### Margin tools
+
+Icon buttons with tooltips, stacked in the left margin level with the paragraph's first line. Paragraphs and quotes get them, and headings don't. When the margin is too small, they become a `⋯` control in the gap above the paragraph, opening a small labelled menu over the text.
 
 Interlinear lines are content the reader asked for, not a control, so the text below them moves. Text already above them stays still.
 
 ## Saved words
 
-Saving takes one click on the star in the popup, with no dialog, and the star fills. Clicking it again unsaves. Asking people to categorise at save time is how word lists die.
+Saving takes one click on the star in the popup, with no dialog, and the star fills. Clicking it again unsaves. Asking people to categorise at save time is how word lists die. A word or phrase is saved once per language, so its star stays filled wherever it appears again, and the first sentence it was saved from is the one kept.
 
 Each entry stores the word or phrase, translation, context sentence, source, L2 and date. If translation isn't available, the word still saves with the translation blank.
 
@@ -134,9 +149,9 @@ The list is a drawer view, reachable from the reader and the library:
 - Deleting from an entry's `⋯` menu happens straight away, with a brief Undo.
 - A language selector appears only once there are saved words in two or more languages.
 - The notice reads: "Saved in this browser only. Uninstalling Tolk deletes them."
-- **Export for Anki (TSV):** word, translation, sentence and source, for the selected language, so each language can go into its own deck. A missing translation is a blank column.
+- **Export for Anki (TSV):** word, translation, sentence and source, for the selected language, so each language can go into its own deck. A missing translation is a blank column. The file starts with Anki's `#separator`, `#html` and `#columns` headers, which need Anki 2.1.54 or later.
 
-Saved words get a dotted underline in Learner mode wherever they appear again. Matching is deliberately cautious, since a missed match costs little and a false one misleads.
+Saved words get a dotted underline in Learner mode wherever they appear again. Matching is deliberately cautious, since a missed match costs little and a false one misleads: the same whole words in the same order, ignoring case, within one sentence and in the same language. Other forms of a word don't match.
 
 Left out of v1: search, tags, editing a translation and filling in blank translations later.
 
@@ -289,7 +304,7 @@ Shortcuts apply on the reader page only and don't fire while typing in a field. 
 
 ## Long selections
 
-The popup translates a selection of any length and scrolls within itself if the result is long. Save appears only for selections short enough to be a vocabulary item, with the limit set during M4.
+The popup translates a selection of any length and scrolls within itself if the result is long. Save appears only for selections of up to 20 words within one block, which is enough for most whole sentences. Longer selections can still be translated and heard.
 
 ## After v1: reserved room
 

@@ -32,8 +32,8 @@ A block's `html` is untrusted, whatever its source. `render.ts` parses it in an 
 
 ## Storage
 
-- **Books:** IndexedDB, as original file blobs plus parsed metadata and reading position. Needs the `unlimitedStorage` permission. `localStorage` is too small and only holds strings.
-- **Saved words:** IndexedDB, so they stay local.
+- **Books:** IndexedDB, as original file blobs plus parsed metadata and reading position. `localStorage` is too small and only holds strings.
+- **Saved words:** IndexedDB, so they stay local. `unlimitedStorage` exempts them from eviction when disk space runs low, and shows no warning at install. A saved word's source is stored by value, so it outlives the book it came from.
 - **Settings:** `chrome.storage.sync`.
 - **Voice choices:** `chrome.storage.local`, so a remote voice picked on one computer never applies on another.
 - **Model output:** in memory only. Don't persist it.
@@ -97,6 +97,16 @@ Simplify and revert follow one sequence in one function:
 
 Anything that bypasses this desynchronises the highlight.
 
+## Interlinear lines
+
+Interlinear lines live inside the block but aren't a block mutation, because the L2 doesn't change. The index holds element references and offsets into `text`, and a line changes neither, so speech can carry on while one appears. `interlinear.ts` adds a line at each sentence's end offset, splitting a text node between words if it has to, and it compares the block's text with `text` afterwards and logs an error if they differ.
+
+A line must never be tokenized, since that would make the translation readable words. A language change rebuilds from the source blocks, so the tokenizer can't meet one. Margin tools are added after indexing for the same reason, and keep their labels in attributes, so a block's text stays exactly what was indexed. Simplify, when it arrives, removes lines first (step 2 above).
+
+## Speech ranges
+
+Hear and Read this paragraph are one mechanism in `playback.ts`: a range of words to speak before stopping. It uses the same one-utterance-per-sentence path as a session, cut at the range's ends, so the same word index maps its boundaries. The last utterance keeps the sentence's closing punctuation when the range reaches it, because that gives the voice its falling tone.
+
 ## Language changes
 
 Detection can finish after the reader is built, and an override can come at any time. A language change rebuilds the whole chapter, because every block's segmentation depends on the language: `showChapter()` in `reader.ts` renders and indexes the source blocks in a detached fragment, stops speech and swaps the index through `replaceBlocks()`, then replaces the page's chapter in one step. It never re-tokenizes existing word spans, which would nest them. Speech doesn't resume, because the voice list has changed too.
@@ -110,7 +120,7 @@ Detection can finish after the reader is built, and an override can come at any 
 - **Timeouts:** every Prompt API request gets its own `AbortController` and a timeout, because a model can hang on a repetition loop with no error. A cold model can legitimately take well over a minute, and the model can fall out of memory again while idle.
 - **Validation:** re-detect the language of Simplify output and retry once, then fail visibly. Validate structured output against what the feature needs too, since a schema guarantees the format and not the truth.
 - **Stale results:** select word A, then B before A resolves, and A's late result must not land in B's popup. Use a generation counter.
-- **Concurrency:** one in-flight request per capability, with a cancellable queue where the paragraph being read has priority.
+- **Concurrency:** one in-flight request per capability, with a cancellable queue. For translation, `translation.ts` puts a popup ahead of a paragraph, because someone waiting on one word shouldn't wait for a long paragraph. Each request is gated again when its turn comes, and has a timeout, because a request that never answers mustn't block the queue.
 
 ## State
 

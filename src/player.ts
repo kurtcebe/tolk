@@ -7,15 +7,18 @@ import { isFollowing, mountFollow } from "./follow.js";
 import { openLanguageChooser } from "./language-status.js";
 import { languageName } from "./languages.js";
 import {
+  activeRange,
   didSpeechFail,
   getStatus,
   pause,
   play,
+  playRange,
   returnToPosition,
   speechSettingsChanged,
   stepSentence,
   subscribePlayback,
   togglePlayback,
+  type SpeechRange,
 } from "./playback.js";
 import {
   getSettings,
@@ -53,6 +56,8 @@ const MARGIN_NEEDED_PX = 240;
 let openInBook = false;
 /** Set when Play is what opened the picker, so picking a voice starts speech. */
 let playAfterPick = false;
+/** The same, for a range: what to speak once a voice has been picked. */
+let rangeAfterPick: SpeechRange | null = null;
 
 export function mountPlayer(): void {
   mountFollow(renderPlayer);
@@ -95,6 +100,24 @@ export async function handlePlayClick(): Promise<void> {
     return;
   }
   togglePlayback();
+}
+
+/**
+ * Speaks a range, for Hear and Read this paragraph. Like Play, a language with
+ * only remote voices offers one rather than speaking. In Book mode that opens the
+ * player too, since the picker belongs to it and its note says the text leaves.
+ */
+export async function speakRange(range: SpeechRange): Promise<void> {
+  await voicesReady();
+  if (currentVoice() === null && availableVoices().length > 0) {
+    rangeAfterPick = range;
+    if (!isPlayerVisible()) {
+      setOpenInBook(true);
+    }
+    requireElement("voice-picker").showPopover();
+    return;
+  }
+  await playRange(range);
 }
 
 function setOpenInBook(open: boolean): void {
@@ -155,7 +178,9 @@ function renderPlayer(): void {
     requireElement(id).setAttribute("aria-disabled", String(status === "idle"));
   }
 
-  requireElement("back-to-position").hidden = status === "idle" || isFollowing();
+  // Hear doesn't move the page, so there's no reading position to go back to.
+  requireElement("back-to-position").hidden =
+    status === "idle" || isFollowing() || activeRange()?.follow === false;
   renderVoiceButton();
   renderNote(noVoices);
   renderSpeed();
@@ -225,6 +250,7 @@ function mountVoicePicker(): void {
   requireElement("voice-picker").addEventListener("toggle", (event) => {
     if (event instanceof ToggleEvent && event.newState === "closed") {
       playAfterPick = false;
+      rangeAfterPick = null;
     }
   });
 }
@@ -273,11 +299,14 @@ function describeVoice(voice: SpeechSynthesisVoice): string {
 
 function handleVoicePicked(voiceURI: string): void {
   const shouldPlay = playAfterPick;
+  const pendingRange = rangeAfterPick;
   pickVoice(voiceURI);
   requireElement("voice-picker").hidePopover();
   renderVoicePicker();
   speechSettingsChanged();
-  if (shouldPlay) {
+  if (pendingRange !== null) {
+    void playRange(pendingRange);
+  } else if (shouldPlay) {
     void play();
   }
 }

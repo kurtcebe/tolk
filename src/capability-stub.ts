@@ -13,14 +13,31 @@ import { isOneOf, isRecord } from "./state.js";
 const STUB_KEY = "capabilityStub";
 const CAPABILITY_STATES = ["unavailable", "downloadable", "downloading", "available"] as const;
 const VOICE_KINDS = ["local", "remote", "none"] as const;
+const TRANSLATION_RESULTS = [
+  "text",
+  "empty",
+  "echo",
+  "runaway",
+  "fails",
+  "partial",
+  "hangs",
+] as const;
+const RUNAWAY_REPEATS = 500;
 const DOWNLOAD_STEPS = 10;
 const DOWNLOAD_STEP_MS = 300;
 const FAILS_AT_STEP = 5;
 
 export type StubbedState = (typeof CAPABILITY_STATES)[number];
 export type StubbedVoices = (typeof VOICE_KINDS)[number];
+export type StubbedTranslationResult = (typeof TRANSLATION_RESULTS)[number];
+
+let stubbedTranslations = 0;
 
 export interface CapabilityStub {
+  /** Replaces what the translator answers. */
+  translationResult?: StubbedTranslationResult;
+  /** Delays each stubbed translation, and ignores cancelling on purpose. */
+  translationDelayMs?: number;
   translator?: StubbedState;
   detector?: StubbedState;
   /** Replaces what the detector answers. */
@@ -57,12 +74,63 @@ export async function runStubDownload(
   }
 }
 
+/** Whether translating should use the stand-in below rather than Chrome's translator. */
+export function stubsTranslation(stub: CapabilityStub): boolean {
+  return (
+    stub.translator !== undefined ||
+    stub.translationResult !== undefined ||
+    stub.translationDelayMs !== undefined
+  );
+}
+
+/** Answers like a translator would, including the ways a real one can go wrong. */
+export async function runStubTranslation(stub: CapabilityStub, text: string): Promise<unknown> {
+  stubbedTranslations += 1;
+  if (stub.translationDelayMs !== undefined) {
+    await new Promise((resolve) => window.setTimeout(resolve, stub.translationDelayMs));
+  }
+  switch (stub.translationResult) {
+    case "empty":
+      return "";
+    case "echo":
+      return text;
+    case "runaway":
+      return "herhaling ".repeat(RUNAWAY_REPEATS);
+    case "fails":
+      throw new Error("Stubbed translation failure");
+    case "partial":
+      if (stubbedTranslations % 2 === 0) {
+        throw new Error("Stubbed translation failure");
+      }
+      return `[stub] ${text}`;
+    case "hangs":
+      return new Promise(() => {});
+    case "text":
+    case undefined:
+      return `[stub] ${text}`;
+  }
+}
+
 function parseStub(stored: unknown): CapabilityStub {
   if (!isRecord(stored)) {
     return {};
   }
-  const { translator, detector, detection, downloadFails, voices } = stored;
+  const {
+    translator,
+    detector,
+    detection,
+    downloadFails,
+    voices,
+    translationResult,
+    translationDelayMs,
+  } = stored;
   const stub: CapabilityStub = { downloadFails: downloadFails === true };
+  if (isOneOf(TRANSLATION_RESULTS, translationResult)) {
+    stub.translationResult = translationResult;
+  }
+  if (typeof translationDelayMs === "number") {
+    stub.translationDelayMs = translationDelayMs;
+  }
   if (isOneOf(CAPABILITY_STATES, translator)) {
     stub.translator = translator;
   }

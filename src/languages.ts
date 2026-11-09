@@ -47,6 +47,11 @@ export function sameLanguage(first: string, second: string): boolean {
   return comparisonKey(first) === comparisonKey(second);
 }
 
+/** The same string for every tag a reader would call the same language. */
+export function languageKey(tag: string): string {
+  return comparisonKey(tag) ?? tag;
+}
+
 function comparisonKey(tag: string): string | null {
   return closestTranslationLanguage(tag) ?? primarySubtag(tag);
 }

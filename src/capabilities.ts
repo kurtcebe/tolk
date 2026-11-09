@@ -5,7 +5,12 @@
 // `unavailable` and `downloadable` are normal answers, so nothing here throws for
 // them. A download only starts from a click (invariant 6).
 
-import { readStub, runStubDownload } from "./capability-stub.js";
+import {
+  readStub,
+  runStubDownload,
+  runStubTranslation,
+  stubsTranslation,
+} from "./capability-stub.js";
 import { isOneOf } from "./state.js";
 
 const STATES = ["unavailable", "downloadable", "downloading", "available"] as const;
@@ -95,6 +100,28 @@ export function translationTarget(pair: LanguagePair): CapabilityTarget {
       const translator = await Translator.create({ ...pair, monitor: watchProgress(onProgress) });
       translator.destroy();
     },
+  };
+}
+
+export interface TranslatorSession {
+  /** The answer is model output, so it stays `unknown` until the caller has checked it. */
+  translate(text: string, signal: AbortSignal): Promise<unknown>;
+  destroy(): void;
+}
+
+/** Opens a translator. Only call this once a translation tracker reports `available`. */
+export async function openTranslator(pair: LanguagePair): Promise<TranslatorSession> {
+  const stub = await readStub();
+  if (stubsTranslation(stub)) {
+    return {
+      translate: (text) => runStubTranslation(stub, text),
+      destroy: () => {},
+    };
+  }
+  const translator = await Translator.create(pair);
+  return {
+    translate: (text, signal) => translator.translate(text, { signal }),
+    destroy: () => translator.destroy(),
   };
 }
 

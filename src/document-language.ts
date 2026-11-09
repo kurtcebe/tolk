@@ -9,6 +9,7 @@ import {
   detectionTarget,
   detectLanguages,
   translationTarget,
+  type LanguagePair,
 } from "./capabilities.js";
 import { pickLanguage } from "./detect.js";
 import { browserLanguage, sameLanguage } from "./languages.js";
@@ -51,6 +52,15 @@ export function isDetecting(): boolean {
 /** False when L2 is Unknown or equals L1, which leaves nothing to translate. */
 export function hasTranslationPair(): boolean {
   return translationPairKey !== null;
+}
+
+/** What to translate from and to, or null when L2 is Unknown or equals L1. */
+export function getTranslationPair(): LanguagePair | null {
+  const sourceLanguage = getLanguage();
+  const targetLanguage = getOwnLanguage();
+  return sourceLanguage !== null && !sameLanguage(sourceLanguage, targetLanguage)
+    ? { sourceLanguage, targetLanguage }
+    : null;
 }
 
 /** L1. Until first run is finished, the card's pre-filled language applies. */
@@ -113,16 +123,14 @@ function languageChanged(): void {
 
 /** Checks the current pair. Translation has no pair when L2 is Unknown or equals L1. */
 function refreshTranslation(): void {
-  const sourceLanguage = getLanguage();
-  const targetLanguage = getOwnLanguage();
-  const hasPair = sourceLanguage !== null && !sameLanguage(sourceLanguage, targetLanguage);
-  const key = hasPair ? `${sourceLanguage}:${targetLanguage}` : null;
+  const pair = getTranslationPair();
+  const key = pair !== null ? `${pair.sourceLanguage}:${pair.targetLanguage}` : null;
   if (key === translationPairKey) {
     return;
   }
   translationPairKey = key;
-  if (hasPair) {
-    void translationStatus.track(translationTarget({ sourceLanguage, targetLanguage }));
+  if (pair !== null) {
+    void translationStatus.track(translationTarget(pair));
   } else {
     translationStatus.clear();
   }

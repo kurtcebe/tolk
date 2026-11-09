@@ -30,6 +30,20 @@ import {
 
 export type PlaybackStatus = "idle" | "playing" | "paused";
 
+/** A word in the current index. */
+export interface WordPosition {
+  blockIndex: number;
+  wordIndex: number;
+}
+
+/** A stretch of text to speak and then stop, for Hear and Read this paragraph. */
+export interface SpeechRange {
+  from: WordPosition;
+  to: WordPosition;
+  /** Hear leaves the page where it is, since its text is already on screen. */
+  follow: boolean;
+}
+
 interface Position {
   blockIndex: number;
   sentenceIndex: number;
@@ -59,6 +73,9 @@ let blocks: BlockIndex[] = [];
 let position: Position = START;
 let status: PlaybackStatus = "idle";
 let speechFailed = false;
+let range: SpeechRange | null = null;
+// Where a session under way had got to when a range interrupted it.
+let placeBeforeRange: Position | null = null;
 
 // Bumped by every start and stop. An utterance's events carry the number it
 // started with, so a late event from a cancelled utterance can't move anything.
@@ -85,8 +102,82 @@ export function replaceBlocks(chapterBlocks: BlockIndex[]): void {
   blocks = chapterBlocks;
 }
 
+export function getBlocks(): readonly BlockIndex[] {
+  return blocks;
+}
+
 export function getStatus(): PlaybackStatus {
   return status;
+}
+
+/** The range being spoken. Compare it with `===` to tell whose it is. */
+export function activeRange(): SpeechRange | null {
+  return range;
+}
+
+/**
+ * Speaks a range and stops at its end. A session already under way picks up
+ * again afterwards, paused at the place it had reached.
+ */
+export async function playRange(next: SpeechRange): Promise<void> {
+  await voicesReady();
+  const start = positionOf(next.from);
+  if (start === null || currentVoice() === null) {
+    return;
+  }
+  if (range === null && status !== "idle") {
+    placeBeforeRange = position;
+  }
+  range = next;
+  position = start;
+  speechFailed = false;
+  if (next.follow) {
+    startFollowing();
+  }
+  setStatus("playing");
+  speakFromPosition();
+}
+
+/** Stops a range early, as if it had reached its end. */
+export function stopRange(): void {
+  if (range !== null) {
+    endRange();
+  }
+}
+
+function positionOf({ blockIndex, wordIndex }: WordPosition): Position | null {
+  const sentences = blocks[blockIndex]?.sentences ?? [];
+  const sentenceIndex = sentenceOfWord(sentences, wordIndex);
+  return sentenceIndex === -1 ? null : { blockIndex, sentenceIndex, wordIndex };
+}
+
+function endRange(): void {
+  const place = placeBeforeRange;
+  if (place === null) {
+    finish();
+    return;
+  }
+  silence();
+  range = null;
+  placeBeforeRange = null;
+  position = place;
+  clearHighlights();
+  paintPosition();
+  setStatus("paused");
+}
+
+/** Seeking or stepping is the reader taking over, so the range and its way back are dropped. */
+function leaveRange(): void {
+  range = null;
+  placeBeforeRange = null;
+}
+
+function isAtRangeEnd(): boolean {
+  return (
+    range !== null &&
+    position.blockIndex === range.to.blockIndex &&
+    position.sentenceIndex === positionOf(range.to)?.sentenceIndex
+  );
 }
 
 export function didSpeechFail(): boolean {
@@ -135,6 +226,7 @@ export function seekToWord(blockId: string, wordIndex: number): void {
   }
   const sentenceIndex = sentenceOfWord(block.sentences, wordIndex);
   if (sentenceIndex !== -1) {
+    leaveRange();
     startFollowing();
     moveTo({ blockIndex, sentenceIndex, wordIndex });
   }
@@ -147,6 +239,7 @@ export function stepSentence(direction: -1 | 1): void {
   }
   const next = neighbouringSentence(direction);
   if (next !== null) {
+    leaveRange();
     startFollowing();
     moveTo(next);
   }
@@ -217,7 +310,7 @@ function speakFromPosition(): void {
   const resumeWord =
     position.wordIndex > sentence.firstWord ? block.words[position.wordIndex] : undefined;
   const from = resumeWord?.start ?? sentence.start;
-  const raw = block.text.slice(from, sentence.end);
+  const raw = block.text.slice(from, spokenEnd(located));
   // charIndex counts from the start of the utterance, so this maps it back.
   const base = from + (raw.length - raw.trimStart().length);
   const spoken = raw.trim();
@@ -278,6 +371,19 @@ function speakFromPosition(): void {
   startWatchdog(spoken.length, utterance.rate, () => hasStarted);
 }
 
+/**
+ * Where this utterance stops: a range's last word, or else the sentence's end.
+ * A range that reaches its sentence's last word keeps the closing punctuation,
+ * because that's what gives the voice its falling tone.
+ */
+function spokenEnd({ block, sentence }: Located): number {
+  const last =
+    range !== null && isAtRangeEnd() && range.to.wordIndex < sentence.lastWord
+      ? block.words[range.to.wordIndex]
+      : undefined;
+  return last?.end ?? sentence.end;
+}
+
 function handleWordBoundary(
   voice: SpeechSynthesisVoice,
   { block, sentence }: Located,
@@ -321,6 +427,10 @@ function markNoWordPositions(voice: SpeechSynthesisVoice): void {
 }
 
 function advance(): void {
+  if (isAtRangeEnd()) {
+    endRange();
+    return;
+  }
   const next = neighbouringSentence(1);
   if (next === null) {
     finish();
@@ -332,6 +442,7 @@ function advance(): void {
 
 function finish(): void {
   silence();
+  leaveRange();
   position = START;
   clearHighlights();
   setStatus("idle");
@@ -397,9 +508,10 @@ function paintPosition(): void {
   if (located === null) {
     return;
   }
-  const { block, sentence } = located;
-  const first = block.words[sentence.firstWord];
-  const last = block.words[sentence.lastWord];
+  const { block } = located;
+  const [firstWord, lastWord] = wordsToBand(located);
+  const first = block.words[firstWord];
+  const last = block.words[lastWord];
   if (first !== undefined && last !== undefined) {
     paintSentence(first.element, last.element);
   }
@@ -414,9 +526,24 @@ function paintPosition(): void {
   }
 }
 
+/** The sentence, cut down to a range's ends, so the band marks only what gets spoken. */
+function wordsToBand({ sentence }: Located): [number, number] {
+  if (range === null) {
+    return [sentence.firstWord, sentence.lastWord];
+  }
+  const { from, to } = range;
+  const { blockIndex } = position;
+  return [
+    from.blockIndex === blockIndex
+      ? Math.max(sentence.firstWord, from.wordIndex)
+      : sentence.firstWord,
+    to.blockIndex === blockIndex ? Math.min(sentence.lastWord, to.wordIndex) : sentence.lastWord,
+  ];
+}
+
 function followPosition(): void {
   const located = locatePosition();
-  if (located === null) {
+  if (located === null || range?.follow === false) {
     return;
   }
   const { block, sentence } = located;

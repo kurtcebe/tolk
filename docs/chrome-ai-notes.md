@@ -29,6 +29,16 @@ Read while building availability and languages. These come from the docs, not fr
 - **Prompt API versions:** the built-in APIs table now says 138 for extensions and 148 for the web, which agrees with its text. Our older note above about the two disagreeing looks resolved. Runtime detection is still the rule.
 - **Language list:** Chrome's Translator page lists 39 codes and says the list can change. There's no runtime call for it, so `src/languages.ts` holds a snapshot, used only to fill dropdowns.
 
+### Read while building Translate
+
+- **`translate()` options and errors:** MDN documents `translate(input, { signal })`, and lists `AbortError`, `InvalidStateError` and `QuotaExceededError`. Chrome's Translator page mentions none of them. Tolk passes a signal, and sends long text one sentence at a time.
+- **One at a time:** Chrome's page says translations run sequentially and that long ones block later ones, and recommends chunking. `src/translation.ts` queues requests, and a popup goes ahead of a paragraph.
+- **No context option:** neither page documents a way to give a word its sentence, so a selected word is translated on its own.
+- **Not in workers:** Chrome's page says the API isn't available in Web Workers, so translation runs on the reader page.
+- **No way to delete a model:** the docs we read describe no API or setting for removing one. Chrome purges models itself when free disk space runs low, under an enterprise policy, or after 30 days without meeting eligibility criteria, and `destroy()` only releases an instance. A purge can happen at any time, even mid-session, so a translation can fail after availability said `available`.
+- **Re-downloading disagrees:** the get-started page says a removed model "redownloads once the requirements are met", while the model management page says it isn't re-downloaded automatically and that an app must call `create()`. Tolk only ever calls `create()` for a download from a click, either way.
+- **Sizes:** none of those pages gives a size for a model or language pack.
+
 ## Languages
 
 The Prompt API and Summarizer docs list only `en`, `ja`, `es`, `de` and `fr`, with more in development. On a Chrome build tested 2026-08-13, `create()` without `expectedOutputs` also warned: *"Please specify a supported output language code: [de, en, es, fr, ja]."*
@@ -192,7 +202,7 @@ Chrome can evict the model if free space drops below about 10 GB, so availabilit
 
 `chrome://on-device-internals` shows what the machine has and lets you force a download.
 
-To force a state this machine isn't in, set a stub from the reader page's DevTools console and reload. It's ignored unless the extension is loaded unpacked, and it's read on each check.
+To force a state this machine isn't in, set a stub from the reader page's DevTools console and reload. It's ignored unless the extension is loaded unpacked, and it's read on each check. DevTools can refuse a pasted command until you type `allow pasting` in the console.
 
 ```js
 chrome.storage.local.set({ capabilityStub: { translator: "downloadable" } })
@@ -205,3 +215,7 @@ chrome.storage.local.remove("capabilityStub")
 | `downloadFails` | `true` | A stubbed download stops halfway and fails |
 | `detection` | `{ language: "nl", confidence: 0.3 }` | Replaces what the detector answers. `"und"` or a low confidence gives Unknown |
 | `voices` | `local`, `remote`, `none` | Keeps only those voices for the language |
+| `translationResult` | `text`, `empty`, `echo`, `runaway`, `fails`, `partial`, `hangs` | Replaces what the translator answers. `text` returns `[stub] ` plus the input, `partial` fails every second request, and `hangs` never answers, so it reaches the 30 second timeout |
+| `translationDelayMs` | A number | Delays each stubbed answer, and ignores cancelling, so a late result really does arrive late |
+
+Setting `translator`, `translationResult` or `translationDelayMs` uses the stubbed translator instead of Chrome's.

@@ -125,6 +125,103 @@
       <a class="drawer-link" href="help.html" target="_blank">Help</a>
     </aside>
 
+    <aside
+      id="saved-drawer"
+      class="drawer"
+      aria-label="Saved words"
+      tabindex="-1"
+    >
+      <div id="saved-language-row" class="setting" hidden>
+        <label class="setting-label" for="saved-language">Language</label>
+        <select id="saved-language" class="language-select"></select>
+      </div>
+      <p id="saved-empty" class="status-note"></p>
+      <div id="saved-list" class="saved-list"></div>
+      <p id="saved-undo" class="saved-undo" role="status" hidden></p>
+      <button id="saved-export" class="saved-export" type="button" hidden>
+        Export for Anki (TSV)
+      </button>
+      <p class="status-note">
+        Saved in this browser only. Uninstalling Tolk deletes them.
+      </p>
+    </aside>
+
+    <div
+      id="word-popup"
+      class="word-popup"
+      role="dialog"
+      aria-label="Selected text"
+      hidden
+    >
+      <p id="popup-text" class="popup-text"></p>
+      <div id="popup-translation" class="popup-translation" aria-live="polite"></div>
+      <p id="popup-note" class="status-note" hidden></p>
+      <div class="popup-actions">
+        <button id="popup-hear" class="popup-button" type="button">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path
+              d="M3 8v4h3l4 3.5v-11L6 8zM13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10"
+            />
+          </svg>
+          <span id="popup-hear-label">Hear</span>
+        </button>
+        <button
+          id="popup-save"
+          class="popup-button popup-save"
+          type="button"
+          aria-pressed="false"
+          aria-label="Save this word"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path
+              d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7z"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <template id="margin-tools-template">
+      <span class="margin-tools">
+        <button
+          class="tool tool-overflow"
+          type="button"
+          aria-label="Paragraph tools"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5 10h.01M10 10h.01M15 10h.01" />
+          </svg>
+        </button>
+        <span class="tool-row">
+          <button
+            class="tool tool-translate"
+            type="button"
+            aria-label="Translate"
+            aria-pressed="false"
+            title="Translate"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M2.5 15 6 5l3.5 10M3.7 12h4.6M12 10h6M15.5 7.5 18 10l-2.5 2.5" />
+            </svg>
+          </button>
+          <button
+            class="tool tool-read"
+            type="button"
+            aria-label="Read this paragraph"
+            aria-pressed="false"
+            title="Read this paragraph"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path
+                d="M3 8v4h3l4 3.5v-11L6 8zM13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10"
+              />
+            </svg>
+          </button>
+        </span>
+      </span>
+    </template>
+
     <div id="player" class="player" role="region" aria-label="Read aloud" hidden>
       <button id="back-to-position" class="back-button" type="button" hidden>
         Back to reading position
@@ -272,6 +369,20 @@
         <svg viewBox="0 0 20 20" aria-hidden="true">
           <path
             d="M3 8v4h3l4 3.5v-11L6 8zM13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10"
+          />
+        </svg>
+      </button>
+      <button
+        id="saved-button"
+        class="icon-button"
+        type="button"
+        aria-label="Saved words"
+        aria-expanded="false"
+        aria-controls="saved-drawer"
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path
+            d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7z"
           />
         </svg>
       </button>

@@ -15,7 +15,8 @@
       <p>
         Tolk is a reader for the language you're learning. It reads the text
         aloud and highlights each word as it's spoken, so you can follow along
-        at a speed that suits you.
+        at a speed that suits you. It translates what you select, and keeps the
+        words you want to remember.
       </p>
       <p>
         Tolk is still being built. For now, clicking its toolbar icon opens a
@@ -28,6 +29,8 @@
           <li><a href="#read-along">Reading along</a></li>
           <li><a href="#speed">Speed</a></li>
           <li><a href="#voices">Voices</a></li>
+          <li><a href="#translate">Translating</a></li>
+          <li><a href="#saved-words">Saved words</a></li>
           <li><a href="#languages">Languages</a></li>
           <li><a href="#shortcuts">Keyboard shortcuts</a></li>
           <li><a href="#privacy">Privacy</a></li>
@@ -40,11 +43,15 @@
         at any time, at the top right, without losing your line.
       </p>
       <ul>
-        <li><strong>Learner</strong> keeps the player on screen.</li>
         <li>
-          <strong>Book</strong> hides the player for quiet reading. The speaker
-          button at the top right brings it back, without starting to speak.
-          Switching to Book pauses any speech.
+          <strong>Learner</strong> keeps the player on screen, shows the tools
+          beside each paragraph, and underlines your saved words.
+        </li>
+        <li>
+          <strong>Book</strong> hides all of that for quiet reading. The speaker
+          button at the top right brings the player back, without starting to
+          speak. Switching to Book pauses any speech. Selecting text still shows
+          its translation.
         </li>
       </ul>
 
@@ -61,6 +68,13 @@
         <li>
           <strong>Select text:</strong> dragging across text or double-clicking
           a word selects it, without moving your place.
+        </li>
+        <li>
+          <strong>Hear one thing:</strong> <em>Hear</em> in the popup reads only
+          what you selected. <em>Read this paragraph</em>, beside a paragraph in
+          Learner mode, reads that paragraph. Both stop by themselves, and
+          clicking them again stops them early. If reading had already started,
+          it waits, paused, at the place you'd reached.
         </li>
         <li>
           <strong>Move by sentence:</strong> use the previous and next buttons.
@@ -123,6 +137,59 @@
         usually highlights each word, so try one if you want word highlighting.
       </p>
 
+      <h2 id="translate">Translating</h2>
+      <p>
+        Translation runs on your computer, using a language pack that Chrome
+        downloads once. Selecting text never starts that download, but
+        translating a paragraph does, because clicking it is a clear request.
+      </p>
+      <ul>
+        <li>
+          <strong>A word or phrase:</strong> select it, and a popup shows the
+          translation. A partly selected word counts as the whole word. Click
+          elsewhere or press <kbd>Esc</kbd> to close the popup.
+        </li>
+        <li>
+          <strong>A paragraph:</strong> in Learner mode, hover over a paragraph
+          or reach it with <kbd>Tab</kbd>, and choose the Translate button in
+          the margin. A translated line appears under each sentence. Choose it
+          again to remove them. In a narrow window, the tools are behind a
+          <em>⋯</em> button above the paragraph.
+        </li>
+      </ul>
+      <p>
+        A word on its own has no sentence around it, so its translation can be
+        the wrong sense of the word. If it seems odd, select the whole sentence.
+        Translations can be wrong in other ways too, so treat them as help
+        rather than as an authority.
+      </p>
+
+      <h2 id="saved-words">Saved words</h2>
+      <p>
+        Press the star in the popup to save a word or phrase of up to 20 words,
+        along with its translation and the sentence it came from. Press it again
+        to remove it. If translation isn't available, the word is saved without
+        one.
+      </p>
+      <p>
+        The star at the top right opens your list. Each word is listed once per
+        language, with the sentence you first saved it from. In Learner mode,
+        saved words have a dotted underline wherever they appear again. Only the
+        same whole word counts, so other forms of a word aren't underlined.
+      </p>
+
+      <h3>Using them in Anki</h3>
+      <ol>
+        <li>Choose <em>Export for Anki (TSV)</em> in the list. If you've saved
+          words in several languages, pick a language first, so each can go in
+          its own deck.</li>
+        <li>In Anki, choose <em>File</em> and then <em>Import</em>, and pick the
+          file.</li>
+        <li>Match the Word, Translation, Sentence and Source columns to your
+          note type's fields, and import.</li>
+      </ol>
+      <p>This needs Anki 2.1.54 or later.</p>
+
       <h2 id="languages">Languages</h2>
       <p>
         Tolk works with two languages: the one you're reading, and your own.
@@ -150,8 +217,8 @@
 
       <h3>Translation status</h3>
       <p>
-        Tolk can't translate yet, but the settings already show whether Chrome
-        can translate from the language of the text into yours on this device.
+        The settings show whether Chrome can translate from the language of the
+        text into yours on this device.
       </p>
       <ul>
         <li><strong>Ready:</strong> it's on this device.</li>
@@ -195,7 +262,7 @@
           </tr>
           <tr>
             <td><kbd>Esc</kbd></td>
-            <td>Close the voice list or settings</td>
+            <td>Close the popup, then the voice list or the open panel</td>
           </tr>
         </tbody>
       </table>
@@ -214,9 +281,13 @@
           Your voice choice stays on this computer.
         </li>
         <li>
-          If you choose a download in the settings, Chrome fetches that language
-          model from Google. Your reading isn't sent with it, and detecting a
-          language happens on this device.
+          If you choose a download, Chrome fetches that language model from
+          Google. Your reading isn't sent with it, and detecting a language and
+          translating both happen on this device.
+        </li>
+        <li>
+          Saved words stay in this browser and never go to your Google account.
+          Uninstalling Tolk deletes them, so export any you want to keep.
         </li>
       </ul>
     </main>

@@ -3,7 +3,7 @@
   "name": "Tolk",
   "version": "0.1.0",
   "description": "Read real articles and books in the language you're learning, with everything running on your own machine.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "unlimitedStorage"],
   "background": {
     "service_worker": "js/background.js",
     "type": "module"

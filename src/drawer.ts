@@ -9,37 +9,57 @@ import {
   updateSettings,
 } from "./state.js";
 
+/** Each drawer closes from the button that opened it, and only one is open at a time. */
+const DRAWERS = [
+  { panel: "settings-drawer", button: "settings-button" },
+  { panel: "saved-drawer", button: "saved-button" },
+] as const;
+
+type Drawer = (typeof DRAWERS)[number];
+
 export function mountDrawer(): void {
-  mountToggle();
+  mountToggles();
   mountSettings();
   mountTextSizeStepper();
 }
 
 export function openDrawer(): void {
-  setDrawerOpen(true);
+  const settings = DRAWERS[0];
+  setOpenDrawer(settings);
 }
 
-function setDrawerOpen(open: boolean): void {
-  requireElement("settings-drawer").classList.toggle("open", open);
-  requireElement("settings-button").setAttribute("aria-expanded", String(open));
+function setOpenDrawer(open: Drawer | null): void {
+  for (const drawer of DRAWERS) {
+    const isOpen = drawer === open;
+    requireElement(drawer.panel).classList.toggle("open", isOpen);
+    requireElement(drawer.button).setAttribute("aria-expanded", String(isOpen));
+  }
 }
 
-function mountToggle(): void {
-  const button = requireElement("settings-button");
-  const drawer = requireElement("settings-drawer");
+function openDrawerNow(): Drawer | undefined {
+  return DRAWERS.find(({ panel }) => requireElement(panel).classList.contains("open"));
+}
 
-  button.addEventListener("click", () => {
-    const open = !drawer.classList.contains("open");
-    setDrawerOpen(open);
-    if (open) {
-      drawer.focus();
-    }
-  });
+function mountToggles(): void {
+  for (const drawer of DRAWERS) {
+    requireElement(drawer.button).addEventListener("click", () => {
+      const open = openDrawerNow() !== drawer;
+      setOpenDrawer(open ? drawer : null);
+      if (open) {
+        requireElement(drawer.panel).focus();
+      }
+    });
+  }
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && drawer.classList.contains("open")) {
-      setDrawerOpen(false);
-      button.focus();
+    // An open popover is what Escape closes first, not the drawer behind it.
+    if (event.key !== "Escape" || document.querySelector(":popover-open") !== null) {
+      return;
+    }
+    const drawer = openDrawerNow();
+    if (drawer !== undefined) {
+      setOpenDrawer(null);
+      requireElement(drawer.button).focus();
     }
   });
 }
