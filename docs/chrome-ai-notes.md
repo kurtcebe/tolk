@@ -44,6 +44,16 @@ Read while building availability and languages. These come from the docs, not fr
 - **Prompt API versions, again:** read through a summarising fetch on 2026-11-09, the built-in APIs table seems to give 148 for both web and extensions, while its text says 138 for extensions. That appears to reopen the disagreement noted above as resolved, so check the page by eye before relying on it. Runtime detection is still the rule, and live pages make no Prompt API calls.
 - **Language Detector:** its page doesn't document `und`, `inputQuota` or any `availability()` result besides `downloadable`, and it says `create()` needs user activation. A reader tab opened from the icon has none of its own, so a detector that needs downloading waits for the click in the drawer, as it already did.
 
+### Read while building the library
+
+M7 adds no new AI calls: books use the existing detection and translation paths. These come from the docs, read through a summarising fetch.
+
+- **Prompt API versions, again:** the built-in APIs table now seems to have two Prompt API rows: Chrome 148 for the web and 138 for extensions, then an origin trial for sampling parameters on the web and 148 for extensions. That may explain the earlier disagreement, with 138 being the API in extensions and 148 its sampling parameters. The page doesn't say so. Runtime detection is still the rule.
+- **Page dates:** the fetch reported "last updated" as 2025-09-12 for the built-in APIs page and 2025-05-20 for the Language Detector page, though the table has changed since we first read it. Don't treat those dates as proof nothing changed.
+- **Language Detector:** nothing new. It still says to avoid very short phrases and single words, and to report unknown at low confidence.
+- **`DecompressionStream`:** not built-in AI, but it's new to Tolk. MDN documents `deflate-raw` and doesn't say what corrupt input does. Tested in Chrome 157 on 2026-11-09: reading the stream rejects, so `zip.ts` treats that as a damaged file.
+- **`contextMenus`:** the `action` context covers the toolbar icon's menu, with a limit of 6 top-level items. The page doesn't say whether the permission adds an install warning, so check that when loading the extension.
+
 ## Languages
 
 The Prompt API and Summarizer docs list only `en`, `ja`, `es`, `de` and `fr`, with more in development. On a Chrome build tested 2026-08-13, `create()` without `expectedOutputs` also warned: *"Please specify a supported output language code: [de, en, es, fr, ja]."*

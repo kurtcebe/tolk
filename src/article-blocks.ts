@@ -1,10 +1,13 @@
-// Turns Readability's HTML into blocks. That HTML has no fixed shape: nested divs,
-// bare text beside paragraphs, paragraphs inside list items. Nothing readable may
-// be lost or repeated, so every text node ends up in exactly one block. The HTML
-// is untrusted and is only parsed here, in an inert document. render.ts rebuilds
-// each block from an allowlist when it reaches the page.
+// Turns Readability's or a book's HTML into blocks. That HTML has no fixed shape:
+// nested divs, bare text beside paragraphs, paragraphs inside list items. Nothing
+// readable may be lost or repeated, so every text node ends up in exactly one
+// block. The HTML is untrusted and is only parsed here, in an inert document.
+// render.ts rebuilds each block from an allowlist when it reaches the page.
 
 import type { Block, BlockType } from "./document.js";
+
+/** What a book's images become before this runs. It splits a paragraph, like any block. */
+export const PLACED_IMAGE = "tolk-image";
 
 const HEADINGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
 
@@ -13,6 +16,7 @@ const BLOCK_LEVEL_TAGS = [
   "div", "dl", "dt", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2",
   "h3", "h4", "h5", "h6", "header", "hr", "li", "main", "nav", "ol", "p", "pre",
   "section", "summary", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul",
+  PLACED_IMAGE,
 ];
 const BLOCK_LEVEL = new Set(BLOCK_LEVEL_TAGS);
 const BLOCK_LEVEL_SELECTOR = BLOCK_LEVEL_TAGS.join(",");
@@ -33,20 +37,24 @@ interface Context {
 
 export function articleToBlocks(content: string, title: string): Block[] {
   const parsed = new DOMParser().parseFromString(content, "text/html");
-  const blocks: Block[] = [];
-  const add: AddBlock = (type, html, marker) => {
-    const block: Block = { id: `b${blocks.length + 1}`, type, html };
-    if (marker !== undefined) {
-      block.marker = marker;
-    }
-    blocks.push(block);
-  };
-
-  walk(parsed.body, { type: "paragraph" }, add, parsed);
-  return withoutRepeatedTitle(blocks, title);
+  // A page's own markup could use the book-only tag, and it must not make an image.
+  for (const placed of parsed.body.querySelectorAll(PLACED_IMAGE)) {
+    placed.remove();
+  }
+  return withoutRepeatedTitle(contentToBlocks(parsed.body), title);
 }
 
-type AddBlock = (type: BlockType, html: string, marker?: string) => void;
+/** Blocks from an element in an inert document. */
+export function contentToBlocks(content: Element): Block[] {
+  const blocks: Block[] = [];
+  const add: AddBlock = (block) => {
+    blocks.push({ id: `b${blocks.length + 1}`, ...block });
+  };
+  walk(content, { type: "paragraph" }, add, content.ownerDocument);
+  return blocks;
+}
+
+type AddBlock = (block: Omit<Block, "id">) => void;
 
 function walk(container: Element, context: Context, add: AddBlock, owner: Document): void {
   let run: Node[] = [];
@@ -77,8 +85,20 @@ function walk(container: Element, context: Context, add: AddBlock, owner: Docume
 
 function walkBlock(element: Element, context: Context, add: AddBlock, owner: Document): void {
   const tag = element.localName;
-  if (HEADINGS.has(tag) && element.querySelector(BLOCK_LEVEL_SELECTOR) === null) {
+  if (tag === PLACED_IMAGE) {
+    add({
+      type: "image",
+      html: "",
+      image: {
+        path: element.getAttribute("data-path") ?? "",
+        alt: element.getAttribute("data-alt") ?? "",
+      },
+    });
+  } else if (HEADINGS.has(tag) && element.querySelector(BLOCK_LEVEL_SELECTOR) === null) {
     addText(element, { type: "heading" }, add);
+  } else if (HEADINGS.has(tag) && element.querySelector(PLACED_IMAGE) !== null) {
+    // A book's chapter heading can hold a picture, and its words are still a heading.
+    walk(element, { type: "heading" }, add, owner);
   } else if (tag === "blockquote") {
     walk(element, { type: "quote" }, add, owner);
   } else if (tag === "li") {
@@ -95,14 +115,14 @@ function addText(element: Element, context: Context, add: AddBlock): void {
     return;
   }
   // Read-only serialising, in the inert document. render.ts is what rebuilds it.
-  add(context.type, element.getHTML(), context.marker);
+  add({ type: context.type, html: element.getHTML(), marker: context.marker });
   context.marker = undefined;
 }
 
 function addRow(row: Element, add: AddBlock): void {
   const cells = [...row.children].filter((cell) => (cell.textContent ?? "").trim() !== "");
   if (cells.length > 0) {
-    add("paragraph", cells.map((cell) => cell.getHTML()).join(CELL_SEPARATOR));
+    add({ type: "paragraph", html: cells.map((cell) => cell.getHTML()).join(CELL_SEPARATOR) });
   }
 }
 
@@ -129,13 +149,14 @@ function isElement(node: Node): node is Element {
 }
 
 /** The chapter title is already shown and read aloud, so a matching first heading would repeat it. */
-function withoutRepeatedTitle(blocks: Block[], title: string): Block[] {
-  const first = blocks[0];
+export function withoutRepeatedTitle(blocks: Block[], title: string): Block[] {
+  // A picture can come first, in a book's chapter heading.
+  const first = blocks.find((block) => block.type !== "image");
   if (first?.type !== "heading") {
     return blocks;
   }
   const text = new DOMParser().parseFromString(first.html, "text/html").body.textContent ?? "";
-  return squeeze(text) === squeeze(title) ? blocks.slice(1) : blocks;
+  return squeeze(text) === squeeze(title) ? blocks.filter((block) => block !== first) : blocks;
 }
 
 function squeeze(text: string): string {

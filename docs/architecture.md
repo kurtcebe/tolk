@@ -27,12 +27,12 @@ A block's `html` is untrusted, whatever its source. `render.ts` parses it in an 
 
 - **Injected script:** extracts the article and hands it over, only after a click or shortcut. No AI calls here, because host pages are hostile and the DOM isn't ours.
 - **Reader page:** a full-page extension page holding tokenizing, speech, AI calls and UI. Built-in AI APIs are available there directly.
-- **Library page:** imports and lists books. It can share a page with the reader if that proves simpler.
+- **Library page:** imports and lists books, on its own page.
 - **Service worker:** kept thin.
 
 ## Storage
 
-- **Books:** IndexedDB, as original file blobs plus parsed metadata and reading position. `localStorage` is too small and only holds strings.
+- **Books:** IndexedDB, as original file blobs plus parsed metadata and reading position. `localStorage` is too small and only holds strings. They have their own `tolk-books` database, with the file in a separate store from the details, so saving a position never touches the file and adding books can't put saved words at risk.
 - **Saved words:** IndexedDB, so they stay local. `unlimitedStorage` exempts them from eviction when disk space runs low, and shows no warning at install. A saved word's source is stored by value, so it outlives the book it came from.
 - **Settings:** `chrome.storage.sync`.
 - **Voice choices:** `chrome.storage.local`, so a remote voice picked on one computer never applies on another.
@@ -43,8 +43,9 @@ A block's `html` is untrusted, whatever its source. `render.ts` parses it in an 
 The icon or shortcut grants `activeTab` for the current page, with no host permissions.
 
 1. **Extract:** `background.ts` makes two `executeScript` calls, one injecting `vendor/Readability.js` and one running `extractArticle` from `extract.ts`. Two calls, because the docs don't say whether several files run in order or what a file returns. Chrome serialises `extractArticle`, so it can't import anything, and it works on a clone of the page because Readability rewrites what it's given.
-2. **Hand over:** the service worker has no `DOMParser`, so it stores Readability's raw result in `chrome.storage.session` under a random ID and opens `reader.html?article=<id>`. Session storage stays in memory and survives a reload, and the entry goes when the reader tab closes. A reader that finds it gone shows a note.
-3. **Build blocks:** `article-blocks.ts` turns the HTML into blocks on the reader page, in an inert document, and `render.ts` then rebuilds each one from its allowlist as usual. Every text node goes into exactly one block: a run of inline content beside block elements becomes its own paragraph, a list item becomes a `list-item` block whose marker is drawn in CSS, and a table row becomes one paragraph.
+2. **Nothing to read:** a page with no article, or one Chrome won't let extensions read, opens `library.html?note=<reason>` instead. Only the reason travels in the address.
+3. **Hand over:** the service worker has no `DOMParser`, so it stores Readability's raw result in `chrome.storage.session` under a random ID and opens `reader.html?article=<id>`. Session storage stays in memory and survives a reload, and the entry goes when the reader tab closes. A reader that finds it gone shows a note.
+4. **Build blocks:** `article-blocks.ts` turns the HTML into blocks on the reader page, in an inert document, and `render.ts` then rebuilds each one from its allowlist as usual. Every text node goes into exactly one block: a run of inline content beside block elements becomes its own paragraph, a list item becomes a `list-item` block whose marker is drawn in CSS, and a table row becomes one paragraph.
 
 The page's `lang` is never read. `language` stays null, and detection decides.
 
@@ -52,11 +53,25 @@ The page's `lang` is never read. `language` stays null, and detection decides.
 
 An EPUB is a zip of XHTML files, with a manifest listing them in order.
 
-- Parse with `DOMParser` as XHTML, and never execute anything from the file.
-- Sanitise on the way in. Remove scripts, event handlers, forms, iframes and remote references (invariants 4 and 6).
-- Serve images from the book's own zip through blob URLs. Don't apply the book's CSS at first, since the reader's typography wins.
-- Unzip with the native `DecompressionStream` and a small zip reader if practical. Otherwise ask before vendoring a library.
-- Detect DRM through `META-INF/encryption.xml`. Note that this file is also used for harmless font obfuscation, so check what it actually encrypts.
+- **Parsing:** `DOMParser` as XHTML, and never execute anything from the file. Real books often break XHTML's rules, for example `&nbsp;` with no doctype, so anything it refuses goes through the HTML parser, after expanding self-closed tags like `<title/>` that would otherwise swallow the body. A string has no encoding, so `epub.ts` decodes the bytes first, honouring a BOM and the declared encoding, because older books are often Latin-1.
+- **Console noise:** Chrome checks the page's CSP while `DOMParser` reads a book, so a book's inline styles and `on*` attributes log CSP violations from `epub.js`. Nothing runs or loads, because they're blocked and the document is inert, and the sanitiser then drops them.
+- **Sanitising:** `epub-document.ts` copies each body into a new inert HTML document, element by element, keeping only `id`, a link's `href` and an `ol`'s `start`. Scripts, event handlers, forms, iframes, media, styles and remote references stop there (invariants 4 and 6). `render.ts` applies its own allowlist afterwards.
+- **Images:** only a path inside the book survives sanitising, and only image types are served, through blob URLs. `chapter-images.ts` measures a chapter's images before it renders, so their space is reserved and a restored position holds. Alt text stays in `alt`, and an image has no block ID, so it's never in the word index. The book's CSS isn't applied, since the reader's typography wins.
+- **Unzipping:** `zip.ts` reads the central directory and unpacks with the native `DecompressionStream`. It counts real bytes against a limit, because a zip's declared sizes can't be trusted and a small file can unpack to something enormous. Zip64 is refused.
+- **DRM:** `META-INF/encryption.xml` is also used for harmless font obfuscation, and Tolk never uses a book's fonts. So a book counts as protected when anything besides a font is encrypted.
+- **Chapters:** one per spine file, in spine order. `linear="no"` parts are skipped unless the contents list them, and parts with no text or images are dropped. A contents entry pointing inside a file splits the file, if the anchor is on a heading or leads straight into one. Contents lists can also point at printed page numbers, which mustn't cut the text up. A `Range` clones the part between two anchors and closes any wrappers it cuts through, so no text is lost or repeated.
+- **Titles:** the contents list's, then the first heading's. A part with neither has no title, and nothing is invented to read out.
+- **Opening:** the whole book is parsed when it opens, and only the current chapter is rendered. On a test machine, War and Peace took under a second. A book's language comes from detection on its longest chapter, since its first pages are often a title page or copyright notice in another language. `dc:language` is ignored, for the same reason a page's `lang` is.
+
+### Moving between chapters
+
+`chapter-view.ts` owns which chapter is on the page, and every change goes through it. There are three paths, all building the chapter complete in a fragment before one swap: a language change rebuilds in place and stops speech, a reader's jump from Contents or a chapter link stops speech and goes to the top, and playback reaching a chapter's end continues.
+
+Continuing needs more care. `advance()` silences speech first, so the watchdog can't fire while the next chapter's images load, then asks `chapter-view.ts` whether there's more. `continueInBlocks()` swaps the index and the page without ending the session, so a reader who paused in that gap stays paused, and a chapter change or language change in that gap abandons the continuation through a generation number. The jump to the top of the chapter goes through `jumpTo()` in `follow.ts`, so it doesn't count as the reader scrolling, and happens before the swap, because a shorter page would otherwise clamp the scroll position and look like a manual scroll.
+
+### Reading position
+
+Stored as chapter, block and word rather than pixels, so it holds at any text size or window width (`reading-position.ts`). It's the word speech has reached during a session, or otherwise the first word on screen. Hear and Read this paragraph don't move it. It's restored last, after detection and fonts, because it's a place in the finished layout. A save reads the book before writing it, which a page navigating away doesn't get time to finish, so the library links wait for the save. Closing a tab can lose the last moment, up to the 800 ms after a scroll or 5 seconds of speech. Play from idle in a book starts at the first sentence that starts on screen.
 
 ## The word index
 
@@ -80,7 +95,7 @@ Rules learned the hard way:
 - **Don't normalise `text`.** It's the exact concatenation of the block's text nodes, plus a `\n` for each `<br>`, so the words on either side of a break don't run together when spoken.
 - **Word numbers are per block.** `data-w` restarts at 0 in each block, so re-tokenizing one block can't renumber any other.
 - **Segment sentences on a stand-in copy with each `\n` replaced by a space.** `Intl.Segmenter` forces a break after any bare line feed, which fragments text converted from line-wrapped sources. This is common in EPUBs of older books. The copy has the same length, so offsets still line up.
-- **Speak one utterance per sentence, not per block.** Chrome stalls on long utterances, and stepping by sentence is simpler. Map `charIndex` back with the sentence's base offset.
+- **Speak one utterance per sentence, not per block.** Chrome stalls on long utterances, and stepping by sentence is simpler. Map `charIndex` back with the sentence's base offset. An utterance has each `\n` replaced by a space, which has the same length, so line-wrapped text doesn't make a voice pause mid-sentence.
 - **Resolve boundaries by binary search** over `words`.
 - **Highlight with the CSS Custom Highlight API,** using two ranges for sentence and word. It paints background only, so it can't reflow text, and it covers the gaps between words.
 
@@ -111,7 +126,7 @@ Anything that bypasses this desynchronises the highlight.
 
 Interlinear lines live inside the block but aren't a block mutation, because the L2 doesn't change. The index holds element references and offsets into `text`, and a line changes neither, so speech can carry on while one appears. `interlinear.ts` adds a line at each sentence's end offset, splitting a text node between words if it has to, and it compares the block's text with `text` afterwards and logs an error if they differ.
 
-A line must never be tokenized, since that would make the translation readable words. A language change rebuilds from the source blocks, so the tokenizer can't meet one. Margin tools are added after indexing for the same reason, and keep their labels in attributes, so a block's text stays exactly what was indexed. Simplify, when it arrives, removes lines first (step 2 above).
+A line must never be tokenized, since that would make the translation readable words. A language change or a new chapter rebuilds from the source blocks, so the tokenizer can't meet one. Margin tools are added after indexing for the same reason, and keep their labels in attributes, so a block's text stays exactly what was indexed. Simplify, when it arrives, removes lines first (step 2 above).
 
 ## Speech ranges
 
@@ -119,9 +134,9 @@ Hear and Read this paragraph are one mechanism in `playback.ts`: a range of word
 
 ## Language changes
 
-Detection can finish after the reader is built, and an override can come at any time. A language change rebuilds the whole chapter, because every block's segmentation depends on the language: `showChapter()` in `reader.ts` renders and indexes the source blocks in a detached fragment, stops speech and swaps the index through `replaceBlocks()`, then replaces the page's chapter in one step. It never re-tokenizes existing word spans, which would nest them. Speech doesn't resume, because the voice list has changed too.
+Detection can finish after the reader is built, and an override can come at any time. A language change rebuilds the whole chapter, because every block's segmentation depends on the language: `rebuildChapter()` in `chapter-view.ts` renders and indexes the source blocks in a detached fragment, stops speech and swaps the index through `replaceBlocks()`, then replaces the page's chapter in one step. It never re-tokenizes existing word spans, which would nest them. Speech doesn't resume, because the voice list has changed too.
 
-`document-language.ts` is the one owner of L2 and L1. A choice always beats detection, so a late detection result can't undo an override.
+`document-language.ts` is the one owner of L2 and L1. A choice always beats detection, so a late detection result can't undo an override. A book saves its override with the book.
 
 ## AI layer
 

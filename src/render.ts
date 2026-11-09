@@ -1,6 +1,7 @@
+import { preparedImage } from "./chapter-images.js";
 import type { Block, BlockType, Chapter, TolkDocument } from "./document.js";
 
-const BLOCK_TAGS: Record<BlockType, keyof HTMLElementTagNameMap> = {
+const BLOCK_TAGS: Record<Exclude<BlockType, "image">, keyof HTMLElementTagNameMap> = {
   heading: "h2",
   paragraph: "p",
   quote: "blockquote",
@@ -37,13 +38,17 @@ export function renderChapter(
   chapter: Chapter,
   container: ParentNode,
 ): void {
-  const title = document.createElement("h1");
-  title.textContent = chapter.title;
-  // The title gets read aloud, so it's indexed like a block. The byline isn't.
-  title.dataset["blockId"] = `${chapter.id}:title`;
-  container.append(title);
+  // A section of a book can have no title, and nothing should be invented to read out.
+  if (chapter.title !== "") {
+    const title = document.createElement("h1");
+    title.textContent = chapter.title;
+    // The title gets read aloud, so it's indexed like a block. The byline isn't.
+    title.dataset["blockId"] = `${chapter.id}:title`;
+    container.append(title);
+  }
 
-  if (document_.author !== null) {
+  // A book's author would otherwise repeat under every chapter.
+  if (document_.author !== null && document_.source.kind !== "book") {
     const byline = document.createElement("p");
     byline.className = "byline";
     byline.textContent = document_.author;
@@ -51,12 +56,32 @@ export function renderChapter(
   }
 
   for (const block of chapter.blocks) {
-    container.append(renderBlock(block));
+    container.append(block.type === "image" ? renderImage(block) : renderBlock(block, block.type));
   }
 }
 
-function renderBlock(block: Block): HTMLElement {
-  const element = document.createElement(BLOCK_TAGS[block.type]);
+/**
+ * Has no block ID, so it never joins the word index and alt text is never read
+ * aloud. The size was measured beforehand, so its space is reserved from the start.
+ */
+function renderImage(block: Block): DocumentFragment | HTMLElement {
+  const prepared = block.image === undefined ? null : preparedImage(block.image.path);
+  if (prepared === null) {
+    return new DocumentFragment();
+  }
+  const image = document.createElement("img");
+  image.src = prepared.url;
+  image.alt = block.image?.alt ?? "";
+  image.width = prepared.width;
+  image.height = prepared.height;
+  const figure = document.createElement("figure");
+  figure.className = "book-image";
+  figure.append(image);
+  return figure;
+}
+
+function renderBlock(block: Block, type: Exclude<BlockType, "image">): HTMLElement {
+  const element = document.createElement(BLOCK_TAGS[type]);
   element.dataset["blockId"] = block.id;
   if (block.type === "list-item") {
     element.className = "list-item";

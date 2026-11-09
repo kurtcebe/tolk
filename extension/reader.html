@@ -122,7 +122,17 @@
         <select id="own-language" class="language-select"></select>
       </div>
 
+      <a class="drawer-link library-link" href="library.html" target="_blank">Your books</a>
       <a class="drawer-link" href="help.html" target="_blank">Help</a>
+    </aside>
+
+    <aside
+      id="contents-drawer"
+      class="drawer"
+      aria-label="Contents"
+      tabindex="-1"
+    >
+      <ol id="contents-list" class="contents-list"></ol>
     </aside>
 
     <aside
@@ -343,6 +353,8 @@
       </button>
     </section>
 
+    <p id="chapter-flash" class="chapter-flash" role="status" hidden></p>
+
     <div class="top-controls">
       <fieldset class="mode-switch">
         <legend class="visually-hidden">Reading mode</legend>
@@ -357,6 +369,19 @@
           </label>
         </div>
       </fieldset>
+      <a
+        class="icon-button library-link"
+        href="library.html"
+        target="_blank"
+        aria-label="Your books"
+        title="Your books"
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path
+            d="M3.5 3.5h3v13h-3zM6.5 3.5h3v13h-3zM12 4.2l2.9-.8 3.2 12.5-2.9.8z"
+          />
+        </svg>
+      </a>
       <button
         id="read-aloud-button"
         class="icon-button"
@@ -370,6 +395,19 @@
           <path
             d="M3 8v4h3l4 3.5v-11L6 8zM13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10"
           />
+        </svg>
+      </button>
+      <button
+        id="contents-button"
+        class="icon-button"
+        type="button"
+        aria-label="Contents"
+        aria-expanded="false"
+        aria-controls="contents-drawer"
+        hidden
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M7 5h10M7 10h10M7 15h10M3 5h.01M3 10h.01M3 15h.01" />
         </svg>
       </button>
       <button

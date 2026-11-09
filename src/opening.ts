@@ -3,34 +3,72 @@
 
 import { articleToBlocks } from "./article-blocks.js";
 import { loadArticle, type StoredArticle } from "./article-store.js";
+import { getBook, getBookFile, type Book } from "./book-store.js";
 import { requireElement } from "./controls.js";
 import type { TolkDocument } from "./document.js";
+import { openBook } from "./epub-document.js";
+import { isLibraryNote } from "./library-notes.js";
 import { SAMPLE_DOCUMENT } from "./sample.js";
 
 const NOTES = {
-  blocked: "Chrome doesn't let extensions read this page.",
-  "no-article": "Tolk couldn't find an article on this page.",
-  failed: "Tolk couldn't open this article.",
   gone: "This article is no longer open. Go back to the page and click the Tolk icon.",
+  "book-gone": "This book is no longer in your library.",
+  "book-failed": "This book couldn't be opened.",
 } as const;
 
 export type OpeningNote = keyof typeof NOTES;
 
 export type Opening =
-  | { kind: "document"; document: TolkDocument }
-  | { kind: "note"; note: OpeningNote };
+  | { kind: "document"; document: TolkDocument; book: Book | null }
+  | { kind: "note"; note: OpeningNote }
+  | { kind: "library"; query: string };
 
 export async function resolveOpening(): Promise<Opening> {
   const params = new URLSearchParams(location.search);
   if (params.has("sample")) {
-    return { kind: "document", document: SAMPLE_DOCUMENT };
+    return { kind: "document", document: SAMPLE_DOCUMENT, book: null };
+  }
+  const bookId = params.get("book");
+  if (bookId !== null) {
+    return await openStoredBook(bookId);
   }
   const id = params.get("article");
   if (id !== null) {
     return await openArticle(id);
   }
+  // Nothing to read belongs in the library, including a tab left over from before it existed.
   const note = params.get("note");
-  return { kind: "note", note: note !== null && note in NOTES ? (note as OpeningNote) : "no-article" };
+  if (note === "gone") {
+    return { kind: "note", note };
+  }
+  return { kind: "library", query: note !== null && isLibraryNote(note) ? `?note=${note}` : "" };
+}
+
+async function openStoredBook(id: string): Promise<Opening> {
+  try {
+    const [book, file] = await Promise.all([getBook(id), getBookFile(id)]);
+    if (book === null || file === null) {
+      return { kind: "note", note: "book-gone" };
+    }
+    const contents = await openBook(file, book.title);
+    return {
+      kind: "document",
+      book,
+      document: {
+        id,
+        source: { kind: "book", bookId: id },
+        title: book.title,
+        author: book.author,
+        // Always detected from the text, like a page, unless the reader chose.
+        language: null,
+        chapters: contents.chapters,
+        loadImage: contents.loadImage,
+      },
+    };
+  } catch (error) {
+    console.warn("Tolk couldn't open this book.", error);
+    return { kind: "note", note: "book-failed" };
+  }
 }
 
 async function openArticle(id: string): Promise<Opening> {
@@ -41,11 +79,11 @@ async function openArticle(id: string): Promise<Opening> {
     }
     const document = articleToDocument(id, article);
     return document.chapters[0]?.blocks.length === 0
-      ? { kind: "note", note: "no-article" }
-      : { kind: "document", document };
+      ? { kind: "library", query: "?note=no-article" }
+      : { kind: "document", document, book: null };
   } catch (error) {
     console.warn("Tolk couldn't load this article.", error);
-    return { kind: "note", note: "failed" };
+    return { kind: "library", query: "?note=failed" };
   }
 }
 
@@ -72,8 +110,8 @@ export function showNote(note: OpeningNote): void {
   if (note === "gone") {
     return;
   }
-  const sample = document.createElement("a");
-  sample.href = "reader.html?sample";
-  sample.textContent = "Read the sample text";
-  message.append(" ", sample);
+  const library = document.createElement("a");
+  library.href = "library.html";
+  library.textContent = "Your books";
+  message.append(" ", library);
 }

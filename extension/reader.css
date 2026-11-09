@@ -301,6 +301,87 @@ svg {
   content: attr(data-marker);
 }
 
+/* A book's picture. Its width and height attributes reserve its space up front. */
+
+.book-image {
+  margin: 1.5em 0;
+  text-align: center;
+}
+
+.book-image img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* After the last line of a chapter. Never indexed, so never read aloud. */
+
+.chapter-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 3em;
+  padding-top: 1em;
+  border-top: 1px solid var(--line);
+  font-family: var(--ui-font);
+  font-size: 15px;
+}
+
+/* Nothing before it means the only link is Next, which still belongs on the right. */
+.chapter-links > :only-child {
+  margin-inline-start: auto;
+}
+
+/* The chapter title as playback moves into it. An overlay, so no text moves. */
+
+.chapter-flash {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  z-index: 15;
+  max-width: min(420px, 100% - 32px);
+  margin: 0;
+  padding: 8px 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.contents-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contents-entry {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.contents-entry:hover {
+  background: var(--active-tool);
+}
+
+.contents-entry[aria-current] {
+  background: var(--active-tool);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* Shown instead of the reader when there's nothing to read. */
 
 .no-document .top-controls {
@@ -732,7 +813,10 @@ svg {
   right: 16px;
   z-index: 20;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
+  max-width: calc(100% - 32px);
   font-size: 14px;
 }
 
@@ -761,6 +845,14 @@ svg {
 
 .icon-button:hover {
   background: var(--active-tool);
+}
+
+/* A link that looks like its neighbours. */
+a.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .icon-button svg {

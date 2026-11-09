@@ -85,6 +85,10 @@ let watchdog = 0;
 let wordReportTimer = 0;
 // Held so Chrome can't garbage-collect a speaking utterance and lose its events.
 let activeUtterance: SpeechSynthesisUtterance | null = null;
+// Asked when speech runs out of chapter. Answers true if it's taking over.
+let chapterEnd: () => boolean = () => false;
+// Where Play from idle starts, when that isn't the top of the chapter.
+let idleStart: () => WordPosition | null = () => null;
 
 export function initPlayback(): void {
   // Speech outlives its page, so clear anything left by a reload or a closed tab.
@@ -100,6 +104,38 @@ export function replaceBlocks(chapterBlocks: BlockIndex[]): void {
   speechFailed = false;
   finish();
   blocks = chapterBlocks;
+}
+
+/**
+ * Hands playback to the next chapter's index without ending the session. Speech
+ * stops first and the old index goes before the page changes (invariant 2), and
+ * a reader who paused while the chapter was loading stays paused.
+ */
+export function continueInBlocks(chapterBlocks: BlockIndex[], swapPage: () => void): void {
+  silence();
+  blocks = chapterBlocks;
+  position = START;
+  clearHighlights();
+  swapPage();
+  if (status === "playing") {
+    startFollowing();
+    speakFromPosition();
+  } else {
+    paintPosition();
+  }
+}
+
+export function onChapterEnd(handler: () => boolean): void {
+  chapterEnd = handler;
+}
+
+export function setIdleStart(find: () => WordPosition | null): void {
+  idleStart = find;
+}
+
+/** The word speech has reached, while a session is under way. */
+export function getCurrentWord(): WordPosition {
+  return { blockIndex: position.blockIndex, wordIndex: position.wordIndex };
 }
 
 export function getBlocks(): readonly BlockIndex[] {
@@ -192,6 +228,10 @@ export async function play(): Promise<void> {
   await voicesReady();
   if (status === "playing" || currentVoice() === null) {
     return;
+  }
+  if (status === "idle") {
+    const start = idleStart();
+    position = (start === null ? null : positionOf(start)) ?? START;
   }
   speechFailed = false;
   startFollowing();
@@ -313,7 +353,9 @@ function speakFromPosition(): void {
   const raw = block.text.slice(from, spokenEnd(located));
   // charIndex counts from the start of the utterance, so this maps it back.
   const base = from + (raw.length - raw.trimStart().length);
-  const spoken = raw.trim();
+  // A line break can make a voice pause. A space has the same length, so charIndex
+  // still maps back, and line-wrapped book text reads as one sentence.
+  const spoken = raw.trim().replaceAll("\n", " ");
 
   silence();
   const started = generation;
@@ -432,12 +474,16 @@ function advance(): void {
     return;
   }
   const next = neighbouringSentence(1);
-  if (next === null) {
-    finish();
+  if (next !== null) {
+    position = next;
+    speakFromPosition();
     return;
   }
-  position = next;
-  speakFromPosition();
+  // Silenced first, so the watchdog can't fire while the next chapter loads.
+  silence();
+  if (!chapterEnd()) {
+    finish();
+  }
 }
 
 function finish(): void {

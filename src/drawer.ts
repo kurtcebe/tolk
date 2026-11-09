@@ -13,6 +13,7 @@ import {
 const DRAWERS = [
   { panel: "settings-drawer", button: "settings-button" },
   { panel: "saved-drawer", button: "saved-button" },
+  { panel: "contents-drawer", button: "contents-button" },
 ] as const;
 
 /** Using these leaves a drawer open. They're separate controls, not the page behind it. */
@@ -21,7 +22,7 @@ const KEEPS_DRAWER_OPEN = ".drawer, .top-controls, .player, .word-popup, .first-
 type Drawer = (typeof DRAWERS)[number];
 
 export function mountDrawer(): void {
-  mountToggles();
+  mountDrawerToggles();
   mountSettings();
   mountTextSizeStepper();
 }
@@ -31,8 +32,17 @@ export function openDrawer(): void {
   setOpenDrawer(settings);
 }
 
+export function closeDrawers(): void {
+  setOpenDrawer(null);
+}
+
+/** The library only has the saved words drawer. */
+function drawersOnPage(): Drawer[] {
+  return DRAWERS.filter(({ panel }) => document.getElementById(panel) !== null);
+}
+
 function setOpenDrawer(open: Drawer | null): void {
-  for (const drawer of DRAWERS) {
+  for (const drawer of drawersOnPage()) {
     const isOpen = drawer === open;
     requireElement(drawer.panel).classList.toggle("open", isOpen);
     requireElement(drawer.button).setAttribute("aria-expanded", String(isOpen));
@@ -40,11 +50,11 @@ function setOpenDrawer(open: Drawer | null): void {
 }
 
 function openDrawerNow(): Drawer | undefined {
-  return DRAWERS.find(({ panel }) => requireElement(panel).classList.contains("open"));
+  return drawersOnPage().find(({ panel }) => requireElement(panel).classList.contains("open"));
 }
 
-function mountToggles(): void {
-  for (const drawer of DRAWERS) {
+export function mountDrawerToggles(): void {
+  for (const drawer of drawersOnPage()) {
     requireElement(drawer.button).addEventListener("click", () => {
       const open = openDrawerNow() !== drawer;
       setOpenDrawer(open ? drawer : null);

@@ -3,6 +3,7 @@
 // model, so it only ever goes in as text (invariant 4).
 
 import { toAnkiTsv } from "./anki-export.js";
+import { listBooks, subscribeBooks } from "./book-store.js";
 import { requireElement, requireSelect } from "./controls.js";
 import { getLanguage, subscribeLanguage } from "./document-language.js";
 import { languageKey, languageName } from "./languages.js";
@@ -21,6 +22,7 @@ const DAY_FORMAT = new Intl.DateTimeFormat("en", { dateStyle: "long" });
 /** The language picked in the selector, by key. Null until a reader picks one. */
 let pickedLanguage: string | null = null;
 let undoTimer = 0;
+let bookIds: ReadonlySet<string> = new Set();
 
 export function mountSavedWords(): void {
   requireSelect("saved-language").addEventListener("change", () => {
@@ -30,6 +32,8 @@ export function mountSavedWords(): void {
   requireElement("saved-export").addEventListener("click", exportForAnki);
   subscribeSavedWords(render);
   subscribeLanguage(render);
+  subscribeBooks(() => void refreshBookIds());
+  void refreshBookIds();
   render();
 }
 
@@ -122,9 +126,29 @@ function renderEntry(saved: SavedWord): HTMLElement {
   return entry;
 }
 
+async function refreshBookIds(): Promise<void> {
+  try {
+    bookIds = new Set((await listBooks()).map((book) => book.id));
+  } catch (error) {
+    console.warn("Couldn't check which books are in the library.", error);
+    bookIds = new Set();
+  }
+  render();
+}
+
 /** The address came from storage, so only a real web address becomes a link. */
 function renderSource(saved: SavedWord): HTMLElement {
   const element = textElement("saved-source", saved.source.title);
+  const { bookId } = saved.source;
+  // A deleted book's words keep its title, with nothing left to link to.
+  if (bookId !== undefined && bookIds.has(bookId)) {
+    const link = document.createElement("a");
+    link.href = `reader.html?book=${encodeURIComponent(bookId)}`;
+    link.target = "_blank";
+    link.textContent = saved.source.title;
+    element.replaceChildren(link);
+    return element;
+  }
   const url = URL.parse(saved.source.url ?? "");
   if (url?.protocol === "http:" || url?.protocol === "https:") {
     const link = document.createElement("a");

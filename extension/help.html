@@ -22,6 +22,7 @@
       <nav aria-label="On this page">
         <ul>
           <li><a href="#opening">Opening an article</a></li>
+          <li><a href="#books">Books</a></li>
           <li><a href="#modes">Book and Learner</a></li>
           <li><a href="#read-along">Reading along</a></li>
           <li><a href="#speed">Speed</a></li>
@@ -50,9 +51,9 @@
           something may occasionally be missing.
         </li>
         <li>
-          <strong>If it can't open a page:</strong> Tolk tells you why, and
-          offers a sample text instead. Chrome doesn't let extensions read some
-          pages, such as its own settings pages and the Chrome Web Store.
+          <strong>If it can't open a page:</strong> your library opens instead,
+          with a note saying why. Chrome doesn't let extensions read some pages,
+          such as its own settings pages and the Chrome Web Store.
         </li>
         <li>
           <strong>Articles aren't kept:</strong> one lasts until you close its
@@ -60,6 +61,47 @@
           again.
         </li>
       </ul>
+
+      <h2 id="books">Books</h2>
+      <p>
+        Your library lists the EPUB books you've imported, most recently read
+        first. While reading, use the books button at the top right or
+        <em>Your books</em> in the settings, under the <em>Aa</em> button. From
+        anywhere else, right-click Tolk's toolbar icon and choose <em>Open
+        library</em>.
+      </p>
+      <ul>
+        <li>
+          <strong>Importing:</strong> choose <em>Import EPUB</em>, or drop files
+          anywhere on the page. Tolk can't open copy-protected books, and a card
+          tells you if a file can't be read.
+        </li>
+        <li>
+          <strong>Reading:</strong> click a book to carry on where you left off,
+          at any text size or window width. The list button at the top right
+          shows the chapters, and links after the last line of a chapter take
+          you to the one before or after.
+        </li>
+        <li>
+          <strong>Reading aloud:</strong> Play starts at the first sentence that
+          starts on your screen, and carries on into the next chapter by itself.
+          Moving to another chapter yourself stops the speech.
+        </li>
+        <li>
+          <strong>What you get:</strong> the book's text and pictures in Tolk's
+          own typography, without its fonts or styling. Pictures aren't read
+          aloud. Links inside a book, such as footnotes, are plain text. Tolk
+          doesn't load anything a book points to on the internet.
+        </li>
+        <li>
+          <strong>Deleting:</strong> use the <em>⋯</em> button on a book's cover.
+          Words you saved from it stay in your list.
+        </li>
+      </ul>
+      <p>
+        Books are stored in this browser only, and uninstalling Tolk deletes
+        them. Keep your own copy of anything you want to keep.
+      </p>
 
       <h2 id="modes">Book and Learner</h2>
       <p>
@@ -198,8 +240,9 @@
       <p>
         The star at the top right opens your list. Each word is listed once per
         language, with the sentence you first saved it from. A word saved from
-        an article links back to that page, which only opens if you click it. In
-        Learner mode,
+        an article links back to that page, which only opens if you click it. A
+        word saved from a book links to that book, for as long as it's in your
+        library. In Learner mode,
         saved words have a dotted underline wherever they appear again. Only the
         same whole word counts, so other forms of a word aren't underlined.
       </p>
@@ -231,8 +274,8 @@
         <li>
           <strong>The language of the text</strong> is detected from the text
           itself. If Tolk gets it wrong, choose <em>Change</em> and pick another.
-          That lasts until you close or reload the page, and <em>Use detected
-          language</em> undoes it.
+          For an article, that lasts until you close or reload the page. A book
+          remembers it. <em>Use detected language</em> undoes it.
         </li>
       </ul>
       <p>
@@ -320,6 +363,11 @@
         <li>
           Saved words stay in this browser and never go to your Google account.
           Uninstalling Tolk deletes them, so export any you want to keep.
+        </li>
+        <li>
+          Books and your place in them stay in this browser too. Opening a book
+          loads nothing from the internet, even if the book points to something
+          there. A link in a book only opens if you click it.
         </li>
       </ul>
     </main>

@@ -1,0 +1,202 @@
+/* The library page. Colours, fonts and shared controls come from reader.css. */
+
+.library {
+  width: min(960px, 100% - 2 * var(--gutter));
+  margin-inline: auto;
+  padding-block: 72px 96px;
+  font-size: 15px;
+}
+
+.library-note {
+  margin: 0 0 24px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.library-header {
+  margin-bottom: 32px;
+}
+
+.library-header h1 {
+  margin: 0 0 16px;
+  font-family: var(--reading-font);
+  font-size: 2em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.library-actions .status-note,
+.library-empty .status-note {
+  margin: 0;
+}
+
+.import-button {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.library-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 96px 24px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.library-empty > p:first-child {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+/* An outline rather than a border, so dragging a file over the page moves nothing. */
+:root[data-dragging] .library {
+  outline: 2px dashed var(--accent);
+  outline-offset: 8px;
+  border-radius: 4px;
+}
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 32px 24px;
+}
+
+.book-card {
+  position: relative;
+  min-width: 0;
+}
+
+.book-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.book-link:hover .book-title {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.book-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  object-fit: cover;
+}
+
+.book-cover-generated {
+  padding: 16px;
+  overflow: hidden;
+  font-family: var(--reading-font);
+  font-size: 1.1em;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.book-title {
+  margin: 10px 0 0;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.book-author,
+.book-status {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.book-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.book-progress progress {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 2px;
+  background: var(--line);
+  appearance: none;
+}
+
+.book-progress progress::-webkit-progress-bar {
+  background: var(--line);
+}
+
+.book-progress progress::-webkit-progress-value {
+  background: var(--accent);
+}
+
+.book-progress .book-status {
+  margin: 0;
+}
+
+.book-problem {
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.book-menu-button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.book-menu-button:hover {
+  background: var(--active-tool);
+}
+
+.book-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.book-confirm-question {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.library-help {
+  width: auto;
+  padding-inline: 10px;
+}

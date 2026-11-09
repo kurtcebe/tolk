@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Your books</title>
+    <link rel="stylesheet" href="reader.css" />
+    <link rel="stylesheet" href="library.css" />
+    <script type="module" src="js/library.js"></script>
+  </head>
+  <body>
+    <main class="library">
+      <p id="library-note" class="library-note" role="status" hidden></p>
+      <header class="library-header">
+        <h1>Your books</h1>
+        <div id="library-actions" class="library-actions">
+          <button class="import-button" type="button">Import EPUB</button>
+          <p class="status-note">
+            Books are stored in this browser only. Uninstalling Tolk deletes them.
+          </p>
+        </div>
+      </header>
+      <p id="library-failure" class="book-problem" role="alert" hidden></p>
+      <section id="library-empty" class="library-empty" hidden>
+        <p>Drop an EPUB here</p>
+        <button class="import-button" type="button">Import EPUB</button>
+        <p class="status-note">
+          Books are stored in this browser only. Uninstalling Tolk deletes them.
+        </p>
+      </section>
+      <div id="library-grid" class="library-grid"></div>
+      <input
+        id="import-input"
+        type="file"
+        accept=".epub,application/epub+zip"
+        multiple
+        hidden
+      />
+    </main>
+
+    <aside
+      id="saved-drawer"
+      class="drawer"
+      aria-label="Saved words"
+      tabindex="-1"
+    >
+      <div id="saved-language-row" class="setting" hidden>
+        <label class="setting-label" for="saved-language">Language</label>
+        <select id="saved-language" class="language-select"></select>
+      </div>
+      <p id="saved-empty" class="status-note"></p>
+      <div id="saved-list" class="saved-list"></div>
+      <p id="saved-undo" class="saved-undo" role="status" hidden></p>
+      <button id="saved-export" class="saved-export" type="button" hidden>
+        Export for Anki (TSV)
+      </button>
+      <p class="status-note">
+        Saved in this browser only. Uninstalling Tolk deletes them.
+      </p>
+    </aside>
+
+    <div class="top-controls">
+      <button
+        id="saved-button"
+        class="icon-button"
+        type="button"
+        aria-label="Saved words"
+        aria-expanded="false"
+        aria-controls="saved-drawer"
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path
+            d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7z"
+          />
+        </svg>
+      </button>
+      <a class="icon-button library-help" href="help.html" target="_blank">Help</a>
+    </div>
+  </body>
+</html>

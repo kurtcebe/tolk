@@ -2,6 +2,7 @@
 // machine, and this keeps a copy in memory so the UI can read them straight away.
 // Other tabs hear about changes over a BroadcastChannel, which stays in the browser.
 
+import { committed, settled } from "./idb.js";
 import { languageKey } from "./languages.js";
 import { isRecord } from "./state.js";
 
@@ -14,6 +15,8 @@ export interface SavedSource {
   title: string;
   /** A live page's address. Words saved from elsewhere don't have one. */
   url?: string;
+  /** The book it came from. The title is kept too, so it outlives the book. */
+  bookId?: string;
 }
 
 export interface SavedWord {
@@ -147,23 +150,6 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-// `<T>` makes this generic: whatever type the request produces is what the
-// promise resolves to, without writing one version of this per type.
-function settled<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.addEventListener("success", () => resolve(request.result));
-    request.addEventListener("error", () => reject(request.error));
-  });
-}
-
-function committed(transaction: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    transaction.addEventListener("complete", () => resolve());
-    transaction.addEventListener("error", () => reject(transaction.error));
-    transaction.addEventListener("abort", () => reject(transaction.error));
-  });
-}
-
 /** Storage is a boundary, so what comes back is checked and anything malformed is skipped. */
 function parseSavedWord(stored: unknown): SavedWord | null {
   if (!isRecord(stored) || !isRecord(stored["source"])) {
@@ -183,6 +169,13 @@ function parseSavedWord(stored: unknown): SavedWord | null {
     return null;
   }
   const url = stored["source"]["url"];
-  const source: SavedSource = typeof url === "string" ? { title, url } : { title };
+  const bookId = stored["source"]["bookId"];
+  const source: SavedSource = { title };
+  if (typeof url === "string") {
+    source.url = url;
+  }
+  if (typeof bookId === "string") {
+    source.bookId = bookId;
+  }
   return { id, word, translation, sentence, language, savedAt, source };
 }

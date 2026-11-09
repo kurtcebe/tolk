@@ -14,7 +14,7 @@ What Tolk v1 looks like and how it behaves. `product-spec.md` settles what's in 
 | Word popup | A selected word or phrase | Translation, Hear, Save |
 | Margin tools | One paragraph | Translate, Read this paragraph |
 | Player | The document's playback | Previous, Play, Next, speed, voice |
-| Top-right controls | The reader | Book or Learner, read aloud (Book mode), drawer buttons |
+| Top-right controls | The reader | Book or Learner, your books, read aloud (Book mode), drawer buttons |
 | Drawer | Settings and lists | Settings, language status, saved words, contents |
 
 ## Reader
@@ -25,7 +25,9 @@ A full-page extension page with one centred column and nothing else at rest. The
 - **Top-right controls:** fixed in place while the text scrolls. They can sit over text in a narrow window.
 - **Text defaults:** 20 px with a line height of 1.65.
 - **Length:** one chapter at a time, in one continuous scroll. A live page counts as one chapter. There are no page turns.
-- **End of a chapter:** previous and next chapter links in a book, with enough space below the last line that the player never covers it.
+- **End of a chapter:** previous and next chapter links in a book, with enough space below the last line that the player never covers it. Using them, or Contents, stops any speech and starts at the top of that chapter.
+- **In a book:** the author isn't repeated under each chapter's title. A section with no title in the book shows and speaks none, and Contents calls it "Section 3".
+- **Book images:** shown at up to the column's width, with their space reserved before the chapter appears. They aren't read aloud, and neither is their alt text. Links inside a book, such as footnotes and cross-references, are plain text in v1.
 
 ### Book and Learner modes
 
@@ -49,11 +51,12 @@ One design that shows more or fewer tools. The modes never have separate styling
 ### Opening a reader
 
 - **Live page:** clicking the toolbar icon extracts the current article and opens the reader in a new tab, using `activeTab` with no host permissions. The original tab stays where it was. A keyboard shortcut does the same.
-- **No readable article:** the icon opens the library instead, with a short note saying why. Until the library exists (M7), the reader tab shows only that note, with a link to the sample text.
+- **No readable article:** the icon opens the library instead, with a short note at the top saying why. The same goes for a page Chrome won't let extensions read, and for an article that couldn't be kept.
 - **Article gone:** a reader tab reopened after its article has gone, such as after a browser restart, shows "This article is no longer open. Go back to the page and click the Tolk icon."
 - **What an article shows:** its text and links. Images are dropped and their captions kept, each list item and table row is one paragraph, and a code block is a plain paragraph. A list's bullet or number is drawn beside the text and is never read aloud.
-- **Book:** from the library, resuming at the reading position.
-- **Library link:** in the toolbar icon's menu and at the bottom of the settings drawer.
+- **Book:** from the library, resuming at the reading position, with that word at the top of the window.
+- **Book gone:** a reader tab whose book has been deleted shows "This book is no longer in your library.", with a link to the library. A book that can't be opened shows "This book couldn't be opened.", with the same link.
+- **Library link:** a button in the reader's top-right controls, in both modes, as well as in the toolbar icon's menu and at the bottom of the settings drawer. In a book, the button and the drawer link open the library in the same tab, and clicking the book resumes it. In a live article they open a new tab, so the article stays open.
 
 ## Player
 
@@ -105,7 +108,8 @@ The chapter title and every block are read aloud. The byline isn't.
 - When the highlight reaches about two-thirds of the way down, the page scrolls smoothly to bring it back to the upper third. With `prefers-reduced-motion`, it jumps instead.
 - Manual scrolling stops following immediately, and the audio carries on. "Back to reading position" appears by the player.
 - Pressing Play while scrolled away continues from where reading stopped and scrolls back there.
-- At the end of a book chapter, playback continues into the next one, and the chapter title shows briefly as it changes.
+- At the end of a book chapter, playback continues into the next one, and the chapter title shows for about 2 seconds in a small overlay at the top, which moves no text. A chapter that's only a picture is passed over.
+- Pressing Play from idle in a book starts at the first sentence that starts on screen, so resuming doesn't jump back to the chapter's start.
 - In Book mode with the player hidden, nothing scrolls by itself.
 
 ## Translate
@@ -162,6 +166,8 @@ Left out of v1: search, tags, editing a translation and filling in blank transla
 A separate full page in the same style and colour scheme.
 
 - **Header:** "Your books", Import EPUB, and a permanent notice: "Books are stored in this browser only. Uninstalling Tolk deletes them."
+- **Top right:** the saved words star and a Help link. There's no settings drawer, so colour and type are set in the reader.
+- **Note:** when the icon landed here because a page had no article, a line above the header says why.
 - **Grid:** cover, title, author and progress, with the most recently read first. Progress shows a bar with a percentage, or "New".
 - **Opening:** clicking a book resumes where the reader left off.
 - **Import:** the button, or a file dropped anywhere on the page. A card appears straight away showing "Importing…".
@@ -214,7 +220,7 @@ Every feature is checked per language, and translation per language pair (invari
 - **Unsure or unavailable:** `Language: Unknown [Choose]`. The text stays readable, and translation and voices start once a language is chosen. If detection only needs a download, a button offers it.
 - **While Unknown:** the drawer hides the Translation and Read aloud rows. The player hides its transport and shows "Choose the text's language to read aloud. [Choose]", which opens the drawer on the dropdown. In Book mode, the read-aloud button is hidden.
 - **Change and Choose:** a native dropdown in the drawer, listing Chrome's translation languages and the detected language. After an override, the line reads `Language: German (chosen)`, and the dropdown's "Use detected language" undoes it.
-- **How long an override lasts:** until the page closes, for now. Books save theirs with the book in M7.
+- **How long an override lasts:** until the page closes for a live page. A book saves its override with the book.
 - **Text movement:** the text carries its language in `lang`, so the font can draw that language's letters correctly. For Turkish, this re-wraps some lines once when the language changes. Correct letters are worth it, since telling `i` from `ı` matters to a learner. Of Chrome's 39 translation languages, only Turkish moved the sample text when tested on 2026-11-09.
 - **Never** fall back on the page's own `lang` tag, which often describes the site rather than the article.
 - **L2 equals L1:** Translate and Save disappear with no message. Read-along stays.

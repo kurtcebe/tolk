@@ -2,7 +2,7 @@
 // read, and L1, the reader's own. A reader's choice always beats detection, so a
 // detection that finishes late can't overwrite an override.
 //
-// An override lasts until the page closes. Books will save theirs in M7.
+// An override lasts until the page closes, except for a book, which saves its own.
 
 import {
   createTracker,
@@ -32,6 +32,16 @@ let translationPairKey: string | null = null;
 /** The language of the text, or null when it's Unknown. */
 export function getLanguage(): string | null {
   return chosen ?? detected;
+}
+
+/** The reader's own choice for this text, or null when detection decides. */
+export function getChosenLanguage(): string | null {
+  return chosen;
+}
+
+/** A choice saved with a book, set before anything is built or subscribed. */
+export function restoreChosenLanguage(language: string | null): void {
+  chosen = language;
 }
 
 export function getDetectedLanguage(): string | null {

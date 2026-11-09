@@ -65,8 +65,17 @@ function scrollToReadingLine(element: HTMLElement): void {
     window.scrollY +
     element.getBoundingClientRect().top -
     window.innerHeight * TARGET_LINE;
+  scrollOurselves(target, reducedMotion.matches ? "instant" : "smooth");
+}
+
+/** Moves the page at once, for a new chapter or a restored position. It isn't the reader scrolling. */
+export function jumpTo(top: number): void {
+  scrollOurselves(top, "instant");
+}
+
+function scrollOurselves(top: number, behavior: ScrollBehavior): void {
   const maximum = document.documentElement.scrollHeight - window.innerHeight;
-  const clamped = Math.max(0, Math.min(target, maximum));
+  const clamped = Math.max(0, Math.min(top, maximum));
 
   // A scroll that goes nowhere never fires scrollend, so it can't be waited for.
   if (Math.abs(clamped - window.scrollY) < 1) {
@@ -77,10 +86,7 @@ function scrollToReadingLine(element: HTMLElement): void {
   // A safety net in case the browser cuts the scroll short without a scrollend.
   window.clearTimeout(settleTimer);
   settleTimer = window.setTimeout(finishOurScroll, SCROLL_SETTLE_MS);
-  window.scrollTo({
-    top: clamped,
-    behavior: reducedMotion.matches ? "instant" : "smooth",
-  });
+  window.scrollTo({ top: clamped, behavior });
 }
 
 function finishOurScroll(): void {
