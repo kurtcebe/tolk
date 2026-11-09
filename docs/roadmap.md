@@ -42,9 +42,9 @@ Content script extraction with a freshly vendored Readability, and the handoff i
 
 ## M7: EPUB and library
 
-Import, sanitising, chapter rendering, navigation, reading position, and the library view. Also playback continuing into the next chapter, moved from M2.
+Import, sanitising, chapter rendering, navigation, reading position, and the library view. Also playback continuing into the next chapter, moved from M2. Also make the library where the icon lands when a page has no readable article, with the note saying why, replacing M6's stand-in note in the reader tab.
 
-**Verify:** several real EPUBs including an older line-wrapped book, a large book, and one with remote references, with no network requests in DevTools. A DRM-protected file gets a clear message.
+**Verify:** several real EPUBs including an older line-wrapped book, a large book, and one with remote references, with no network requests in DevTools. A DRM-protected file gets a clear message. The icon on a page with no article, and on one Chrome won't let extensions read, opens the library with the right note.
 
 ## After v1
 
