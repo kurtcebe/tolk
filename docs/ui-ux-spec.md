@@ -174,7 +174,7 @@ Import problems appear on the card with a Remove button, so a failure can't be m
 
 ## Drawer
 
-A 320 px panel from the right, over the page. It never resizes the text column, and it closes from the button that opened it.
+A 320 px panel from the right, over the page. It never resizes the text column. It closes from the button that opened it, with Escape, or with a press on the text or the page behind it, and that same press still selects or seeks. Pressing the top-right controls, the player or the word popup leaves it open.
 
 - **Settings (`Aa`):** colour scheme, font, text size, line spacing, language status, your own language, and the library and help links.
 - **Saved words (star):** see above.

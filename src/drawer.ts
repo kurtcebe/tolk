@@ -15,6 +15,9 @@ const DRAWERS = [
   { panel: "saved-drawer", button: "saved-button" },
 ] as const;
 
+/** Using these leaves a drawer open. They're separate controls, not the page behind it. */
+const KEEPS_DRAWER_OPEN = ".drawer, .top-controls, .player, .word-popup, .first-run, [popover]";
+
 type Drawer = (typeof DRAWERS)[number];
 
 export function mountDrawer(): void {
@@ -60,6 +63,19 @@ function mountToggles(): void {
     if (drawer !== undefined) {
       setOpenDrawer(null);
       requireElement(drawer.button).focus();
+    }
+  });
+
+  // On pointerdown, which comes before the click, so a button elsewhere that opens
+  // a drawer still gets to. The same press carries on and can select or seek.
+  document.addEventListener("pointerdown", (event) => {
+    const onPageScrollbar = event.clientX >= document.documentElement.clientWidth;
+    if (
+      !onPageScrollbar &&
+      event.target instanceof Element &&
+      event.target.closest(KEEPS_DRAWER_OPEN) === null
+    ) {
+      setOpenDrawer(null);
     }
   });
 }
