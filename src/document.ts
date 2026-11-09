@@ -2,13 +2,15 @@
 // text came from. It isn't called Document because that would shadow the
 // browser's own Document type.
 
-export type BlockType = "heading" | "paragraph" | "quote";
+export type BlockType = "heading" | "paragraph" | "quote" | "list-item";
 
 export interface Block {
   id: string;
   type: BlockType;
   /** Inline content. Untrusted: it only reaches the page through render.ts. */
   html: string;
+  /** A list item's bullet or number. Drawn in CSS, so it's never read aloud or indexed. */
+  marker?: string;
 }
 
 export interface Chapter {
@@ -17,7 +19,7 @@ export interface Chapter {
   blocks: Block[];
 }
 
-export type DocumentSource = { kind: "sample" };
+export type DocumentSource = { kind: "sample" } | { kind: "page"; url: string };
 
 export interface TolkDocument {
   id: string;

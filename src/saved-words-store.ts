@@ -12,6 +12,8 @@ const CHANNEL = "tolk-saved-words";
 
 export interface SavedSource {
   title: string;
+  /** A live page's address. Words saved from elsewhere don't have one. */
+  url?: string;
 }
 
 export interface SavedWord {
@@ -180,5 +182,7 @@ function parseSavedWord(stored: unknown): SavedWord | null {
   ) {
     return null;
   }
-  return { id, word, translation, sentence, language, savedAt, source: { title } };
+  const url = stored["source"]["url"];
+  const source: SavedSource = typeof url === "string" ? { title, url } : { title };
+  return { id, word, translation, sentence, language, savedAt, source };
 }

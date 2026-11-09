@@ -39,6 +39,11 @@ Read while building availability and languages. These come from the docs, not fr
 - **Re-downloading disagrees:** the get-started page says a removed model "redownloads once the requirements are met", while the model management page says it isn't re-downloaded automatically and that an app must call `create()`. Tolk only ever calls `create()` for a download from a click, either way.
 - **Sizes:** none of those pages gives a size for a model or language pack.
 
+### Read while building live pages
+
+- **Prompt API versions, again:** read through a summarising fetch on 2026-11-09, the built-in APIs table seems to give 148 for both web and extensions, while its text says 138 for extensions. That appears to reopen the disagreement noted above as resolved, so check the page by eye before relying on it. Runtime detection is still the rule, and live pages make no Prompt API calls.
+- **Language Detector:** its page doesn't document `und`, `inputQuota` or any `availability()` result besides `downloadable`, and it says `create()` needs user activation. A reader tab opened from the icon has none of its own, so a detector that needs downloading waits for the click in the drawer, as it already did.
+
 ## Languages
 
 The Prompt API and Summarizer docs list only `en`, `ja`, `es`, `de` and `fr`, with more in development. On a Chrome build tested 2026-08-13, `create()` without `expectedOutputs` also warned: *"Please specify a supported output language code: [de, en, es, fr, ja]."*

@@ -4,6 +4,7 @@ const BLOCK_TAGS: Record<BlockType, keyof HTMLElementTagNameMap> = {
   heading: "h2",
   paragraph: "p",
   quote: "blockquote",
+  "list-item": "p",
 };
 
 const INLINE_TAGS = new Set(["em", "i", "strong", "b", "sub", "sup", "br"]);
@@ -57,6 +58,10 @@ export function renderChapter(
 function renderBlock(block: Block): HTMLElement {
   const element = document.createElement(BLOCK_TAGS[block.type]);
   element.dataset["blockId"] = block.id;
+  if (block.type === "list-item") {
+    element.className = "list-item";
+    element.dataset["marker"] = block.marker ?? "";
+  }
   const parsed = new DOMParser().parseFromString(block.html, "text/html");
   appendAllowedChildren(parsed.body, element);
   return element;

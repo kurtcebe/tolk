@@ -49,7 +49,9 @@ One design that shows more or fewer tools. The modes never have separate styling
 ### Opening a reader
 
 - **Live page:** clicking the toolbar icon extracts the current article and opens the reader in a new tab, using `activeTab` with no host permissions. The original tab stays where it was. A keyboard shortcut does the same.
-- **No readable article:** the icon opens the library instead, with a short note saying why.
+- **No readable article:** the icon opens the library instead, with a short note saying why. Until the library exists (M7), the reader tab shows only that note, with a link to the sample text.
+- **Article gone:** a reader tab reopened after its article has gone, such as after a browser restart, shows "This article is no longer open. Go back to the page and click the Tolk icon."
+- **What an article shows:** its text and links. Images are dropped and their captions kept, each list item and table row is one paragraph, and a code block is a plain paragraph. A list's bullet or number is drawn beside the text and is never read aloud.
 - **Book:** from the library, resuming at the reading position.
 - **Library link:** in the toolbar icon's menu and at the bottom of the settings drawer.
 
@@ -292,8 +294,9 @@ Simple outline icons with rounded joins and a stroke of about 1.8 at 20 px. Don'
 - **Left and right arrows:** previous and next sentence.
 - **`[` and `]`:** slower and faster.
 - **Escape:** closes the popup, then the drawer.
+- **`Alt+Shift+R`** (`Option+Shift+R` on a Mac): opens the current page's article, from any page. Readers can change it at `chrome://extensions/shortcuts`.
 
-Shortcuts apply on the reader page only and don't fire while typing in a field. Every control has a visible focus ring, and margin tools appear on keyboard focus as well as hover.
+Apart from that one, shortcuts apply on the reader page only and don't fire while typing in a field. Every control has a visible focus ring, and margin tools appear on keyboard focus as well as hover.
 
 ## Narrow windows
 

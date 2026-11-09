@@ -286,6 +286,34 @@ svg {
   text-underline-offset: 0.15em;
 }
 
+/* The marker comes from an attribute, so it isn't text: it can't be selected,
+   indexed or read aloud. */
+
+.reader p.list-item {
+  margin-bottom: 0.4em;
+  padding-inline-start: 1.6em;
+}
+
+.reader p.list-item::before {
+  position: absolute;
+  inset-inline-start: 0;
+  color: var(--muted);
+  content: attr(data-marker);
+}
+
+/* Shown instead of the reader when there's nothing to read. */
+
+.no-document .top-controls {
+  display: none;
+}
+
+.opening-note {
+  margin-top: 4em;
+  color: var(--muted);
+  font-family: var(--ui-font);
+  font-size: 16px;
+}
+
 /* A translated line under its sentence. Content the reader asked for, so the text
    below it moves, and never part of what can be selected or read aloud. */
 
@@ -616,6 +644,11 @@ svg {
 .saved-source {
   color: var(--muted);
   font-size: 12px;
+}
+
+.saved-source a {
+  color: inherit;
+  text-underline-offset: 0.15em;
 }
 
 .saved-menu-button {

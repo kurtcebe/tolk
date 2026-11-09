@@ -1,19 +1,20 @@
 import { mountAppearance } from "./appearance.js";
 import { mountModeSwitch, requireElement } from "./controls.js";
 import { detectionSample } from "./detect.js";
+import type { TolkDocument } from "./document.js";
 import { getLanguage, startLanguages, subscribeLanguage } from "./document-language.js";
 import { mountDrawer } from "./drawer.js";
 import { mountFirstRun } from "./first-run.js";
 import { mountHighlights } from "./highlight.js";
 import { mountLanguageStatus } from "./language-status.js";
 import { attachMarginTools, mountMarginTools } from "./margin-tools.js";
+import { resolveOpening, showNote } from "./opening.js";
 import { initPlayback, replaceBlocks } from "./playback.js";
 import { mountPlayer } from "./player.js";
 import { renderChapter } from "./render.js";
-import { SAMPLE_DOCUMENT } from "./sample.js";
 import { mountSavedMarks, repaintSavedMarks } from "./saved-marks.js";
 import { mountSavedWords } from "./saved-words.js";
-import { loadSavedWords } from "./saved-words-store.js";
+import { loadSavedWords, type SavedSource } from "./saved-words-store.js";
 import { mountShortcuts } from "./shortcuts.js";
 import { loadSettings } from "./state.js";
 import { indexChapter } from "./tokenize.js";
@@ -29,10 +30,15 @@ async function start(): Promise<void> {
   try {
     await loadSettings();
     mountAppearance();
+    const opening = await resolveOpening();
+    if (opening.kind === "note") {
+      showNote(opening.note);
+      return;
+    }
     mountModeSwitch();
     mountDrawer();
-    showDocument();
-    await waitForDetection();
+    showDocument(opening.document);
+    await waitForDetection(opening.document);
     // The page stays hidden until here, so saved settings, fonts and the text's
     // language can't make the text jump after it first appears.
     await document.fonts.ready;
@@ -42,18 +48,18 @@ async function start(): Promise<void> {
   mountFirstRun();
 }
 
-function showDocument(): void {
+function showDocument(source: TolkDocument): void {
   const reader = requireElement("reader");
   initPlayback();
   mountHighlights();
-  showChapter(reader);
-  document.title = SAMPLE_DOCUMENT.title;
+  showChapter(source, reader);
+  document.title = source.title;
   loadVoices();
   mountLanguageStatus();
   mountPlayer();
   mountShortcuts();
   mountMarginTools();
-  mountWordPopup({ title: SAMPLE_DOCUMENT.title });
+  mountWordPopup(savedSourceOf(source));
   mountSavedWords();
   mountSavedMarks();
   // Not awaited, because a slow database mustn't hold up the text. Underlines
@@ -63,6 +69,12 @@ function showDocument(): void {
   reader.getBoundingClientRect();
 }
 
+function savedSourceOf(source: TolkDocument): SavedSource {
+  return source.source.kind === "page"
+    ? { title: source.title, url: source.source.url }
+    : { title: source.title };
+}
+
 /**
  * Builds the chapter for the current language, and is the only way the language
  * reaches the tokenizer. Tokenizing assumes bare text, so it always starts again
@@ -70,14 +82,14 @@ function showDocument(): void {
  * them. The new chapter is complete before the swap, which happens in one step,
  * so the page never collapses and the scroll position holds.
  */
-function showChapter(reader: HTMLElement): void {
-  const chapter = SAMPLE_DOCUMENT.chapters[0];
+function showChapter(source: TolkDocument, reader: HTMLElement): void {
+  const chapter = source.chapters[0];
   if (chapter === undefined) {
     return;
   }
   const language = getLanguage();
   const fresh = new DocumentFragment();
-  renderChapter(SAMPLE_DOCUMENT, chapter, fresh);
+  renderChapter(source, chapter, fresh);
   const blocks = indexChapter(fresh, language);
 
   replaceBlocks(blocks);
@@ -94,14 +106,14 @@ function showChapter(reader: HTMLElement): void {
   refreshVoices();
 }
 
-async function waitForDetection(): Promise<void> {
+async function waitForDetection(source: TolkDocument): Promise<void> {
   const reader = requireElement("reader");
   let shown = getLanguage();
   subscribeLanguage(() => {
     const language = getLanguage();
     if (language !== shown) {
       shown = language;
-      showChapter(reader);
+      showChapter(source, reader);
     }
   });
   await Promise.race([

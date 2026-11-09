@@ -25,7 +25,7 @@ A block's `html` is untrusted, whatever its source. `render.ts` parses it in an 
 
 ## Where the code runs
 
-- **Content script:** extracts the article and hands it over. No AI calls here, because host pages are hostile and the DOM isn't ours.
+- **Injected script:** extracts the article and hands it over, only after a click or shortcut. No AI calls here, because host pages are hostile and the DOM isn't ours.
 - **Reader page:** a full-page extension page holding tokenizing, speech, AI calls and UI. Built-in AI APIs are available there directly.
 - **Library page:** imports and lists books. It can share a page with the reader if that proves simpler.
 - **Service worker:** kept thin.
@@ -37,6 +37,16 @@ A block's `html` is untrusted, whatever its source. `render.ts` parses it in an 
 - **Settings:** `chrome.storage.sync`.
 - **Voice choices:** `chrome.storage.local`, so a remote voice picked on one computer never applies on another.
 - **Model output:** in memory only. Don't persist it.
+
+## Live pages
+
+The icon or shortcut grants `activeTab` for the current page, with no host permissions.
+
+1. **Extract:** `background.ts` makes two `executeScript` calls, one injecting `vendor/Readability.js` and one running `extractArticle` from `extract.ts`. Two calls, because the docs don't say whether several files run in order or what a file returns. Chrome serialises `extractArticle`, so it can't import anything, and it works on a clone of the page because Readability rewrites what it's given.
+2. **Hand over:** the service worker has no `DOMParser`, so it stores Readability's raw result in `chrome.storage.session` under a random ID and opens `reader.html?article=<id>`. Session storage stays in memory and survives a reload, and the entry goes when the reader tab closes. A reader that finds it gone shows a note.
+3. **Build blocks:** `article-blocks.ts` turns the HTML into blocks on the reader page, in an inert document, and `render.ts` then rebuilds each one from its allowlist as usual. Every text node goes into exactly one block: a run of inline content beside block elements becomes its own paragraph, a list item becomes a `list-item` block whose marker is drawn in CSS, and a table row becomes one paragraph.
+
+The page's `lang` is never read. `language` stays null, and detection decides.
 
 ## EPUB
 

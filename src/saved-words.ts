@@ -118,8 +118,23 @@ function renderEntry(saved: SavedWord): HTMLElement {
     sentence.lang = saved.language;
     entry.append(sentence);
   }
-  entry.append(textElement("saved-source", saved.source.title));
+  entry.append(renderSource(saved));
   return entry;
+}
+
+/** The address came from storage, so only a real web address becomes a link. */
+function renderSource(saved: SavedWord): HTMLElement {
+  const element = textElement("saved-source", saved.source.title);
+  const url = URL.parse(saved.source.url ?? "");
+  if (url?.protocol === "http:" || url?.protocol === "https:") {
+    const link = document.createElement("a");
+    link.href = url.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = saved.source.title;
+    element.replaceChildren(link);
+  }
+  return element;
 }
 
 function textElement(className: string, text: string): HTMLElement {

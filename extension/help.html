@@ -18,13 +18,10 @@
         at a speed that suits you. It translates what you select, and keeps the
         words you want to remember.
       </p>
-      <p>
-        Tolk is still being built. For now, clicking its toolbar icon opens a
-        sample text in Dutch.
-      </p>
 
       <nav aria-label="On this page">
         <ul>
+          <li><a href="#opening">Opening an article</a></li>
           <li><a href="#modes">Book and Learner</a></li>
           <li><a href="#read-along">Reading along</a></li>
           <li><a href="#speed">Speed</a></li>
@@ -36,6 +33,33 @@
           <li><a href="#privacy">Privacy</a></li>
         </ul>
       </nav>
+
+      <h2 id="opening">Opening an article</h2>
+      <p>
+        On a page with an article, click Tolk's toolbar icon or press
+        <kbd>Alt</kbd> <kbd>Shift</kbd> <kbd>R</kbd> (<kbd>Option</kbd>
+        <kbd>Shift</kbd> <kbd>R</kbd> on a Mac). The article opens in a new tab,
+        and the original page stays as it was. You can change the shortcut at
+        <code>chrome://extensions/shortcuts</code>.
+      </p>
+      <ul>
+        <li>
+          <strong>What you get:</strong> the article's text and links. Images
+          aren't shown, though their captions are. Tables become one line per
+          row. Tolk has to guess which part of a page is the article, so
+          something may occasionally be missing.
+        </li>
+        <li>
+          <strong>If it can't open a page:</strong> Tolk tells you why, and
+          offers a sample text instead. Chrome doesn't let extensions read some
+          pages, such as its own settings pages and the Chrome Web Store.
+        </li>
+        <li>
+          <strong>Articles aren't kept:</strong> one lasts until you close its
+          tab or quit Chrome. To read it again, go back to the page and open it
+          again.
+        </li>
+      </ul>
 
       <h2 id="modes">Book and Learner</h2>
       <p>
@@ -173,7 +197,9 @@
       </p>
       <p>
         The star at the top right opens your list. Each word is listed once per
-        language, with the sentence you first saved it from. In Learner mode,
+        language, with the sentence you first saved it from. A word saved from
+        an article links back to that page, which only opens if you click it. In
+        Learner mode,
         saved words have a dotted underline wherever they appear again. Only the
         same whole word counts, so other forms of a word aren't underlined.
       </p>
@@ -272,6 +298,11 @@
       <ul>
         <li>Tolk has no account, analytics or crash reports.</li>
         <li>Tolk doesn't send your reading anywhere itself.</li>
+        <li>
+          Tolk reads a page only when you click its icon or press its shortcut,
+          and only that page. The article stays in memory until you close its
+          tab or quit Chrome.
+        </li>
         <li>
           The one exception is a remote voice, if you pick one: Chrome sends the
           text to Google to be spoken.
