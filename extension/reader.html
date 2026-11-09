@@ -88,6 +88,40 @@
         </div>
       </fieldset>
 
+      <section class="setting language-status" aria-label="Language status">
+        <div class="status-line">
+          <span id="language-label"></span>
+          <button
+            id="language-change"
+            class="link-button"
+            type="button"
+            aria-expanded="false"
+            aria-controls="language-chooser"
+          ></button>
+        </div>
+        <label id="language-chooser" hidden>
+          <span class="visually-hidden">Language of this text</span>
+          <select id="language-select" class="language-select"></select>
+        </label>
+        <p id="detection-status" class="status-note" hidden></p>
+        <dl class="status-table">
+          <div id="translation-row" hidden>
+            <dt>Translation</dt>
+            <dd id="translation-status"></dd>
+          </div>
+          <div id="voices-row" hidden>
+            <dt>Read aloud</dt>
+            <dd id="voices-status"></dd>
+          </div>
+        </dl>
+        <p id="translation-note" class="status-note" hidden></p>
+      </section>
+
+      <div class="setting">
+        <label class="setting-label" for="own-language">Your own language</label>
+        <select id="own-language" class="language-select"></select>
+      </div>
+
       <a class="drawer-link" href="help.html" target="_blank">Help</a>
     </aside>
 
@@ -195,6 +229,22 @@
       </p>
       <div id="voice-list" role="radiogroup" aria-label="Voices"></div>
     </div>
+
+    <section
+      id="first-run"
+      class="first-run"
+      aria-labelledby="first-run-question"
+      hidden
+    >
+      <label id="first-run-question" for="first-run-language">
+        What should Tolk translate into?
+      </label>
+      <select id="first-run-language" class="language-select"></select>
+      <p>Translation and local voices run on this device.</p>
+      <button id="first-run-continue" class="first-run-continue" type="button">
+        Continue
+      </button>
+    </section>
 
     <div class="top-controls">
       <fieldset class="mode-switch">

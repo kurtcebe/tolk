@@ -8,6 +8,14 @@ export function requireElement(id: string): HTMLElement {
   return element;
 }
 
+export function requireSelect(id: string): HTMLSelectElement {
+  const select = requireElement(id);
+  if (!(select instanceof HTMLSelectElement)) {
+    throw new Error(`reader.html's #${id} must be a select`);
+  }
+  return select;
+}
+
 /** Keeps a group of radio buttons and one setting in step, in both directions. */
 export function bindChoice<T extends string>(
   groupName: string,

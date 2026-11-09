@@ -19,6 +19,16 @@ Chrome's status table says the Prompt API reached extensions in 138, while the p
 
 The Proofreader API disagrees with itself too: on 2026-11-08 the built-in APIs page's text called it an origin trial, while its table said developer trial. Neither changes the advice above.
 
+## Drift found 2026-11-09
+
+Read while building availability and languages. These come from the docs, not from testing, except where a result is given.
+
+- **Translator may under-report:** the Translator page says all pairs show as `downloadable` until a site creates a translator for that pair, to protect privacy. M0 saw `available` for `nl` to `en`, so test what an extension page gets on a fresh profile. Clicking Download on a pack that's already there should finish at once, so the help page warns about this.
+- **`und` in detection:** MDN says `detect()` always ends its list with `und`, and that very low-confidence results are left out, so confidences can add up to less than 1. Chrome's page doesn't mention `und`. Treat `und` as Unknown if it ever comes first.
+- **`availability()` results:** MDN says it can fulfil with `null` and can throw, and that `expectedInputLanguages` defaults to `["en"]`. Chrome's page doesn't mention that option, and the types allow neither `null` nor throwing. We pass no options, and treat `null`, anything unexpected or a throw as `unavailable`, logged.
+- **Prompt API versions:** the built-in APIs table now says 138 for extensions and 148 for the web, which agrees with its text. Our older note above about the two disagreeing looks resolved. Runtime detection is still the rule.
+- **Language list:** Chrome's Translator page lists 39 codes and says the list can change. There's no runtime call for it, so `src/languages.ts` holds a snapshot, used only to fill dropdowns.
+
 ## Languages
 
 The Prompt API and Summarizer docs list only `en`, `ja`, `es`, `de` and `fr`, with more in development. On a Chrome build tested 2026-08-13, `create()` without `expectedOutputs` also warned: *"Please specify a supported output language code: [de, en, es, fr, ja]."*
@@ -181,3 +191,17 @@ Chrome can evict the model if free space drops below about 10 GB, so availabilit
 ## Debugging
 
 `chrome://on-device-internals` shows what the machine has and lets you force a download.
+
+To force a state this machine isn't in, set a stub from the reader page's DevTools console and reload. It's ignored unless the extension is loaded unpacked, and it's read on each check.
+
+```js
+chrome.storage.local.set({ capabilityStub: { translator: "downloadable" } })
+chrome.storage.local.remove("capabilityStub")
+```
+
+| Key | Values | Effect |
+| --- | --- | --- |
+| `translator`, `detector` | `unavailable`, `downloadable`, `downloading`, `available` | Replaces what `availability()` answers. A stubbed download runs for 3 seconds without fetching anything |
+| `downloadFails` | `true` | A stubbed download stops halfway and fails |
+| `detection` | `{ language: "nl", confidence: 0.3 }` | Replaces what the detector answers. `"und"` or a low confidence gives Unknown |
+| `voices` | `local`, `remote`, `none` | Keeps only those voices for the language |

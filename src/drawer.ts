@@ -15,18 +15,22 @@ export function mountDrawer(): void {
   mountTextSizeStepper();
 }
 
+export function openDrawer(): void {
+  setDrawerOpen(true);
+}
+
+function setDrawerOpen(open: boolean): void {
+  requireElement("settings-drawer").classList.toggle("open", open);
+  requireElement("settings-button").setAttribute("aria-expanded", String(open));
+}
+
 function mountToggle(): void {
   const button = requireElement("settings-button");
   const drawer = requireElement("settings-drawer");
 
-  const setOpen = (open: boolean): void => {
-    drawer.classList.toggle("open", open);
-    button.setAttribute("aria-expanded", String(open));
-  };
-
   button.addEventListener("click", () => {
     const open = !drawer.classList.contains("open");
-    setOpen(open);
+    setDrawerOpen(open);
     if (open) {
       drawer.focus();
     }
@@ -34,7 +38,7 @@ function mountToggle(): void {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && drawer.classList.contains("open")) {
-      setOpen(false);
+      setDrawerOpen(false);
       button.focus();
     }
   });

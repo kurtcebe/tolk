@@ -10,7 +10,8 @@ export const SAMPLE_DOCUMENT: TolkDocument = {
   source: { kind: "sample" },
   title: "De laatste veerman van Oosterwaal",
   author: "Voorbeeldtekst voor Tolk",
-  language: "nl",
+  // Detected like any other source, so it isn't assumed to be Dutch here.
+  language: null,
   chapters: [
     {
       id: "sample-1",

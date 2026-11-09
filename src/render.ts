@@ -34,7 +34,7 @@ const SAFE_LINK_PROTOCOLS = new Set(["http:", "https:"]);
 export function renderChapter(
   document_: TolkDocument,
   chapter: Chapter,
-  container: HTMLElement,
+  container: ParentNode,
 ): void {
   const title = document.createElement("h1");
   title.textContent = chapter.title;

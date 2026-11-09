@@ -6,6 +6,7 @@
 // cancels the utterance and restarts from the current word, because pause() isn't
 // reliable on every platform. Every restart goes through speakFromPosition().
 
+import { getLanguage } from "./document-language.js";
 import { followSentence, followWord, startFollowing } from "./follow.js";
 import {
   clearHighlights,
@@ -55,7 +56,6 @@ const START: Position = { blockIndex: 0, sentenceIndex: 0, wordIndex: 0 };
 const listeners = new Set<Listener>();
 
 let blocks: BlockIndex[] = [];
-let language: string | null = null;
 let position: Position = START;
 let status: PlaybackStatus = "idle";
 let speechFailed = false;
@@ -69,15 +69,20 @@ let wordReportTimer = 0;
 // Held so Chrome can't garbage-collect a speaking utterance and lose its events.
 let activeUtterance: SpeechSynthesisUtterance | null = null;
 
-export function initPlayback(
-  chapterBlocks: BlockIndex[],
-  documentLanguage: string | null,
-): void {
-  blocks = chapterBlocks;
-  language = documentLanguage;
+export function initPlayback(): void {
   // Speech outlives its page, so clear anything left by a reload or a closed tab.
   speechSynthesis.cancel();
   window.addEventListener("pagehide", () => speechSynthesis.cancel());
+}
+
+/**
+ * Swaps in a newly built word index. The old one's elements are about to leave
+ * the page, so speech stops first and the session starts over (invariant 2).
+ */
+export function replaceBlocks(chapterBlocks: BlockIndex[]): void {
+  speechFailed = false;
+  finish();
+  blocks = chapterBlocks;
 }
 
 export function getStatus(): PlaybackStatus {
@@ -222,7 +227,7 @@ function speakFromPosition(): void {
   const utterance = new SpeechSynthesisUtterance(spoken);
   utterance.voice = voice;
   utterance.lang = voice.lang;
-  utterance.rate = getSpeechPreference(language).rate;
+  utterance.rate = getSpeechPreference(getLanguage()).rate;
   activeUtterance = utterance;
 
   let hasStarted = false;

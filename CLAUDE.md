@@ -29,7 +29,7 @@ Breaking one is a bug even if everything appears to work.
 2. **Mutating a block invalidates its word index.** Every change goes through the single mutate-and-retokenize path. If speech is playing in that block, stop it first.
 3. **No AI call happens without an availability check, per language.** `unavailable` and `downloadable` are normal states with real UI, not error paths. Never assume a capability from another language or another API.
 4. **AI output and EPUB content are untrusted.** Insert model output with `textContent`. Sanitise EPUB content before it reaches the document. Never use `innerHTML` on either.
-5. **Reader controls never reflow the text.** They live in the margin or in overlays, so text doesn't shift under the reader's eye.
+5. **Reader controls never reflow the text.** They live in the margin or in overlays, so text doesn't shift under the reader's eye. There is one named exception: changing the text's language updates its `lang`, so the font can draw that language's letters correctly, and this re-wraps some lines for Turkish.
 6. **Nothing in the extension uses the network.** No `fetch`, `XMLHttpRequest`, host permissions or remote resources, including anything referenced by an EPUB. If a feature seems to need one, stop and raise it. Chrome downloading a model or language pack is allowed, and only ever starts from a click. There is one named exception: Chrome's remote speech voices, which send text to Google, are used only when a reader picks one, and the player says so. Local voices are the default. A second exception needs a conversation first.
 7. **Speech recognition always sets `processLocally = true`, with no fallback.** Without it, audio may go to a server.
 

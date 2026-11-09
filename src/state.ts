@@ -1,6 +1,8 @@
 // The one owner of reader settings. The UI reads from here and subscribes to
 // changes, and only this module talks to storage.
 
+import { TRANSLATION_LANGUAGES, type TranslationLanguage } from "./languages.js";
+
 export const MODES = ["learner", "book"] as const;
 export const SCHEMES = ["auto", "light", "sepia", "dark", "dim"] as const;
 export const FONTS = ["literata", "instrument"] as const;
@@ -29,6 +31,8 @@ export interface Settings {
   textSize: TextSize;
   lineSpacing: LineSpacing;
   speech: Record<string, SpeechPreference>;
+  /** L1, the reader's own language. Null until first run has been answered. */
+  ownLanguage: TranslationLanguage | null;
 }
 
 type Listener = (settings: Settings) => void;
@@ -42,6 +46,7 @@ const DEFAULTS: Settings = {
   textSize: 20,
   lineSpacing: "normal",
   speech: {},
+  ownLanguage: null,
 };
 
 const DEFAULT_SPEECH: SpeechPreference = { rate: 1 };
@@ -190,7 +195,7 @@ function handleStorageChange(changes: {
   setCurrent(parseSettings(stored));
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
@@ -209,6 +214,9 @@ function parseSettings(stored: unknown): Settings {
       DEFAULTS.lineSpacing,
     ),
     speech: parseSpeech(stored["speech"]),
+    ownLanguage: isOneOf(TRANSLATION_LANGUAGES, stored["ownLanguage"])
+      ? stored["ownLanguage"]
+      : DEFAULTS.ownLanguage,
   };
 }
 

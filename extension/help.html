@@ -28,6 +28,7 @@
           <li><a href="#read-along">Reading along</a></li>
           <li><a href="#speed">Speed</a></li>
           <li><a href="#voices">Voices</a></li>
+          <li><a href="#languages">Languages</a></li>
           <li><a href="#shortcuts">Keyboard shortcuts</a></li>
           <li><a href="#privacy">Privacy</a></li>
         </ul>
@@ -122,6 +123,51 @@
         usually highlights each word, so try one if you want word highlighting.
       </p>
 
+      <h2 id="languages">Languages</h2>
+      <p>
+        Tolk works with two languages: the one you're reading, and your own.
+        The text stays readable whatever Tolk knows about either. Both are in
+        the settings, under the <em>Aa</em> button.
+      </p>
+      <ul>
+        <li>
+          <strong>Your own language</strong> is what Tolk will translate into.
+          Tolk asks for it once, the first time it opens, and you can change it
+          in the settings.
+        </li>
+        <li>
+          <strong>The language of the text</strong> is detected from the text
+          itself. If Tolk gets it wrong, choose <em>Change</em> and pick another.
+          That lasts until you close or reload the page, and <em>Use detected
+          language</em> undoes it.
+        </li>
+      </ul>
+      <p>
+        If Tolk can't tell, the language shows as <em>Unknown</em>. Choose one to
+        start reading aloud. If Chrome only needs a download to detect languages,
+        the settings offer it.
+      </p>
+
+      <h3>Translation status</h3>
+      <p>
+        Tolk can't translate yet, but the settings already show whether Chrome
+        can translate from the language of the text into yours on this device.
+      </p>
+      <ul>
+        <li><strong>Ready:</strong> it's on this device.</li>
+        <li>
+          <strong>Needs download:</strong> choose <em>Download</em> and Chrome
+          fetches it. Nothing downloads until you click. This can show even when
+          Chrome already has the language, and the download then finishes
+          straight away.
+        </li>
+        <li>
+          <strong>Not available:</strong> this device or language pair isn't
+          supported. <code>chrome://on-device-internals</code> shows what your
+          device can do.
+        </li>
+      </ul>
+
       <h2 id="shortcuts">Keyboard shortcuts</h2>
       <p>
         These work while the player is visible, except when you're in a control
@@ -163,9 +209,14 @@
           text to Google to be spoken.
         </li>
         <li>
-          Your settings, such as colours and speed, follow your Chrome profile,
-          so Chrome stores them in your Google account. Your voice choice stays
-          on this computer.
+          Your settings, such as colours, speed and your own language, follow
+          your Chrome profile, so Chrome stores them in your Google account.
+          Your voice choice stays on this computer.
+        </li>
+        <li>
+          If you choose a download in the settings, Chrome fetches that language
+          model from Google. Your reading isn't sent with it, and detecting a
+          language happens on this device.
         </li>
       </ul>
     </main>

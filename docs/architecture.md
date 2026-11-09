@@ -97,6 +97,12 @@ Simplify and revert follow one sequence in one function:
 
 Anything that bypasses this desynchronises the highlight.
 
+## Language changes
+
+Detection can finish after the reader is built, and an override can come at any time. A language change rebuilds the whole chapter, because every block's segmentation depends on the language: `showChapter()` in `reader.ts` renders and indexes the source blocks in a detached fragment, stops speech and swaps the index through `replaceBlocks()`, then replaces the page's chapter in one step. It never re-tokenizes existing word spans, which would nest them. Speech doesn't resume, because the voice list has changed too.
+
+`document-language.ts` is the one owner of L2 and L1. A choice always beats detection, so a late detection result can't undo an override.
+
 ## AI layer
 
 - **Gating:** one availability entry point per capability and language. Re-check on each load, since Chrome can evict models when disk space runs low.

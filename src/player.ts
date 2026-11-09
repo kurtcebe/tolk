@@ -2,7 +2,10 @@
 // elsewhere, and sits in fixed overlays so it can't move the text (invariant 5).
 
 import { requireElement } from "./controls.js";
+import { getLanguage, isDetecting, subscribeLanguage } from "./document-language.js";
 import { isFollowing, mountFollow } from "./follow.js";
+import { openLanguageChooser } from "./language-status.js";
+import { languageName } from "./languages.js";
 import {
   didSpeechFail,
   getStatus,
@@ -23,11 +26,12 @@ import {
   updateSpeechPreference,
 } from "./state.js";
 import {
+  areVoicesLoaded,
   availableVoices,
   currentVoice,
-  loadVoices,
   pickVoice,
   reportsWordPositions,
+  subscribeVoices,
   voicesReady,
 } from "./voices.js";
 
@@ -45,15 +49,12 @@ const NUDGE_STEP = 5;
 /** The docked panel's 208 px width, its 16 px from the window edge, and a 16 px gap to the text. */
 const MARGIN_NEEDED_PX = 240;
 
-let language: string | null = null;
 /** Book mode's player is called up by hand. Learner's is always visible. */
 let openInBook = false;
-let voicesLoaded = false;
 /** Set when Play is what opened the picker, so picking a voice starts speech. */
 let playAfterPick = false;
 
-export function mountPlayer(documentLanguage: string | null): void {
-  language = documentLanguage;
+export function mountPlayer(): void {
   mountFollow(renderPlayer);
   mountTransport();
   mountSpeed();
@@ -61,17 +62,11 @@ export function mountPlayer(documentLanguage: string | null): void {
   mountVisibility();
   mountDock();
   subscribePlayback(renderPlayer);
-  loadVoices(language, () => {
+  subscribeLanguage(renderPlayer);
+  subscribeVoices(() => {
     renderVoicePicker();
     renderPlayer();
   });
-  renderPlayer();
-  void markVoicesLoaded();
-}
-
-async function markVoicesLoaded(): Promise<void> {
-  await voicesReady();
-  voicesLoaded = true;
   renderPlayer();
 }
 
@@ -139,15 +134,16 @@ function updateDock(): void {
 }
 
 function renderPlayer(): void {
-  const hasVoices = availableVoices().length > 0;
-  const noVoices = voicesLoaded && !hasVoices;
+  // There's nothing to read aloud with until the text has a language.
+  const unknown = getLanguage() === null;
+  const noVoices = areVoicesLoaded() && availableVoices().length === 0;
   const isBook = getSettings().mode === "book";
 
   requireElement("player").hidden = !isPlayerVisible();
-  requireElement("player-bar").hidden = noVoices;
+  requireElement("player-bar").hidden = unknown || noVoices;
 
   const readAloud = requireElement("read-aloud-button");
-  readAloud.hidden = !isBook || noVoices;
+  readAloud.hidden = !isBook || unknown || noVoices;
   readAloud.setAttribute("aria-expanded", String(openInBook));
   requireElement("player-close").hidden = !isBook;
 
@@ -174,14 +170,32 @@ function renderVoiceButton(): void {
 
 function renderNote(noVoices: boolean): void {
   const note = requireElement("player-note");
+  const language = getLanguage();
+  if (language === null) {
+    renderUnknownNote(note);
+    return;
+  }
   if (noVoices) {
-    note.replaceChildren(`No voice for ${languageName()} on this device. `, addVoiceLink());
+    note.replaceChildren(`No voice for ${languageName(language)} on this device. `, addVoiceLink());
     note.hidden = false;
     return;
   }
   const text = noteForVoice();
   note.textContent = text;
   note.hidden = text === "";
+}
+
+function renderUnknownNote(note: HTMLElement): void {
+  note.hidden = isDetecting();
+  if (note.hidden || note.querySelector("button") !== null) {
+    return;
+  }
+  const choose = document.createElement("button");
+  choose.type = "button";
+  choose.className = "link-button";
+  choose.textContent = "Choose";
+  choose.addEventListener("click", openLanguageChooser);
+  note.replaceChildren("Choose the text's language to read aloud. ", choose);
 }
 
 function addVoiceLink(): HTMLAnchorElement {
@@ -203,14 +217,6 @@ function noteForVoice(): string {
   return reportsWordPositions(voice) === false
     ? `${REMOTE_NOTE} ${SENTENCE_ONLY_NOTE}`
     : REMOTE_NOTE;
-}
-
-function languageName(): string {
-  if (language === null) {
-    return "this language";
-  }
-  const names = new Intl.DisplayNames(["en"], { type: "language" });
-  return names.of(language) ?? "this language";
 }
 
 // Voice picker
@@ -322,13 +328,13 @@ function nudgeBy(direction: -1 | 1, step: number): void {
 }
 
 function commitPosition(sliderPosition: number): void {
-  updateSpeechPreference(language, { rate: positionToRate(sliderPosition) });
+  updateSpeechPreference(getLanguage(), { rate: positionToRate(sliderPosition) });
   renderSpeed();
   speechSettingsChanged();
 }
 
 function renderSpeed(): void {
-  const sliderPosition = rateToPosition(getSpeechPreference(language).rate);
+  const sliderPosition = rateToPosition(getSpeechPreference(getLanguage()).rate);
   speedSlider().value = String(sliderPosition);
   renderSpeedLabel(sliderPosition);
 }

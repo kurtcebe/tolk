@@ -28,7 +28,7 @@ export interface BlockIndex {
  * reading order. Blocks with no words, which can't be spoken, are left out.
  */
 export function indexChapter(
-  container: HTMLElement,
+  container: ParentNode,
   language: string | null,
 ): BlockIndex[] {
   const locale = language ?? undefined;

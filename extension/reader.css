@@ -756,6 +756,10 @@ svg {
 .drawer.open {
   visibility: visible;
   transform: none;
+  /* Visible at once when opening, because a hidden element can't take focus. */
+  transition:
+    transform 180ms ease,
+    visibility 0s;
 }
 
 .drawer:focus {
@@ -763,7 +767,8 @@ svg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer {
+  .drawer,
+  .drawer.open {
     transition: none;
   }
 }
@@ -780,6 +785,99 @@ svg {
   padding: 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+.setting-label {
+  display: block;
+}
+
+.language-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.language-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.status-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.status-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.status-table div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+.status-table dt {
+  flex: 0 0 96px;
+  color: var(--muted);
+}
+
+.status-table dd {
+  margin: 0;
+}
+
+/* An overlay that leaves the text readable and scrollable behind it. */
+.first-run {
+  position: fixed;
+  inset: 96px 0 auto;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(360px, 100% - 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
+  font-size: 14px;
+}
+
+.first-run label {
+  font-weight: 600;
+}
+
+.first-run p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.first-run-continue {
+  align-self: flex-end;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  cursor: pointer;
 }
 
 .choices-swatches .choice span {

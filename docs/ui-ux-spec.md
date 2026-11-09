@@ -195,6 +195,10 @@ Every feature is checked per language, and translation per language pair (invari
 
 - **Detected:** `Language: Dutch (detected) [Change]` in the settings drawer. Change applies to that document only.
 - **Unsure or unavailable:** `Language: Unknown [Choose]`. The text stays readable, and translation and voices start once a language is chosen. If detection only needs a download, a button offers it.
+- **While Unknown:** the drawer hides the Translation and Read aloud rows. The player hides its transport and shows "Choose the text's language to read aloud. [Choose]", which opens the drawer on the dropdown. In Book mode, the read-aloud button is hidden.
+- **Change and Choose:** a native dropdown in the drawer, listing Chrome's translation languages and the detected language. After an override, the line reads `Language: German (chosen)`, and the dropdown's "Use detected language" undoes it.
+- **How long an override lasts:** until the page closes, for now. Books save theirs with the book in M7.
+- **Text movement:** the text carries its language in `lang`, so the font can draw that language's letters correctly. For Turkish, this re-wraps some lines once when the language changes. Correct letters are worth it, since telling `i` from `ı` matters to a learner. Of Chrome's 39 translation languages, only Turkish moved the sample text when tested on 2026-11-09.
 - **Never** fall back on the page's own `lang` tag, which often describes the site rather than the article.
 - **L2 equals L1:** Translate and Save disappear with no message. Read-along stays.
 
@@ -222,6 +226,7 @@ Translation and local voices run on this device.
 - It asks for L1 only, pre-filled from the browser's language, and it can be changed later in the drawer.
 - It never asks for L2, which is detected per document.
 - Model downloads are explained at the first click that needs one, not here.
+- It doesn't block anything, and the text stays scrollable behind it. Only Continue saves and closes it, and the pre-filled language applies until then. If the browser's language isn't one Chrome translates, it pre-fills English.
 
 ## Help
 
