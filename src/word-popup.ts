@@ -15,7 +15,7 @@ import {
 import { openLanguageChooser } from "./language-status.js";
 import { languageName } from "./languages.js";
 import { activeRange, stopRange, subscribePlayback } from "./playback.js";
-import { isPlayerVisible, speakRange } from "./player.js";
+import { speakRange } from "./player.js";
 import {
   deleteSavedWord,
   findSavedWord,
@@ -26,7 +26,7 @@ import {
 } from "./saved-words-store.js";
 import { readSelection, type SelectedText } from "./selection.js";
 import { translateSelection } from "./translation.js";
-import { areVoicesLoaded, availableVoices, currentVoice, subscribeVoices } from "./voices.js";
+import { areVoicesLoaded, availableVoices, subscribeVoices } from "./voices.js";
 
 /** Enough for a whole sentence. Longer selections can still be translated and heard. */
 const MAX_SAVED_WORDS = 20;
@@ -37,7 +37,6 @@ const AFTER_POINTER_MS = 50;
 /** Keyboard selection moves a word at a time, so it waits for a pause. */
 const AFTER_KEYBOARD_MS = 300;
 const POINTER_ECHO_MS = 200;
-const REMOTE_NOTE = "This voice sends the text to Google to be spoken.";
 const SAVE_FAILED = "Couldn't save this word.";
 
 type Translation =
@@ -332,7 +331,7 @@ function render(): void {
   renderTranslation(popup, language);
   renderHear(popup, language);
   renderSave(popup);
-  renderNote(popup, language);
+  renderNote(popup);
   place();
 }
 
@@ -426,15 +425,11 @@ function renderSave(current: Popup): void {
   save.setAttribute("aria-label", isSaved ? "Remove from saved words" : "Save this word");
 }
 
-function renderNote(current: Popup, language: string | null): void {
+// A remote voice is named where it's chosen and in the player, not here.
+function renderNote(current: Popup): void {
   const note = requireElement("popup-note");
-  const voice = currentVoice();
-  // In Learner, the player already says this. A hidden player can't.
-  const needsRemoteNote =
-    language !== null && voice !== null && !voice.localService && !isPlayerVisible();
-  const text = current.saveFailed ? SAVE_FAILED : needsRemoteNote ? REMOTE_NOTE : "";
-  note.textContent = text;
-  note.hidden = text === "";
+  note.textContent = current.saveFailed ? SAVE_FAILED : "";
+  note.hidden = !current.saveFailed;
 }
 
 /** Below the selection, or above it if it would otherwise run off the window. */

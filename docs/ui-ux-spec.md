@@ -100,7 +100,7 @@ The chapter title and every block are read aloud. The byline isn't.
 - Hear, from the popup, plays only the selection and stops. It never scrolls the page.
 - Clicking either one again stops it early.
 - Either one interrupts a session under way, which then waits, paused, at the place it had reached. Seeking or stepping during them takes over from there instead.
-- With only remote voices, they offer a voice like Play does, opening the player in Book mode. With a remote voice already chosen in Book mode, the popup says the text goes to Google, since the player that normally says so is hidden. With no voices, or while the language is Unknown, they're hidden.
+- With only remote voices, they offer a voice like Play does, opening the player in Book mode. With a remote voice already chosen, the popup doesn't repeat that its text goes to Google: the voice picker and the player say so, and the help page explains it. With no voices, or while the language is Unknown, they're hidden.
 
 ### Scrolling during playback
 
