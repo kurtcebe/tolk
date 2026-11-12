@@ -22,7 +22,7 @@ What Tolk v1 looks like and how it behaves. `product-spec.md` settles what's in 
 A full-page extension page with one centred column and nothing else at rest. There's no product name or heading in the reader.
 
 - **Column:** 640 px wide at the default text size. It scales with the text (32em), so the line length holds at every size.
-- **Top-right controls:** fixed in place while the text scrolls. They can sit over text in a narrow window.
+- **Top-right controls:** fixed in place while the text scrolls, and never over the text. When the right margin has room for the docked player, they form a block of the same 208 px width above it: Book or Learner across the top, then the buttons, four to a row. When it hasn't, they fold into one ⋯ menu button, which opens them as an overlay. The overlay closes with Escape, a press outside it, or once a button in it is used. Switching Book or Learner leaves it open.
 - **Text defaults:** 20 px with a line height of 1.65.
 - **Length:** one chapter at a time, in one continuous scroll. A live page counts as one chapter. There are no page turns.
 - **End of a chapter:** previous and next chapter links in a book, with enough space below the last line that the player never covers it. Using them, or Contents, stops any speech and starts at the top of that chapter.
@@ -182,7 +182,7 @@ Import problems appear on the card with a Remove button, so a failure can't be m
 
 ## Drawer
 
-A 320 px panel from the right, over the page. It never resizes the text column. It closes from the button that opened it, with Escape, or with a press on the text or the page behind it, and that same press still selects or seeks. Pressing the top-right controls, the player or the word popup leaves it open.
+A 320 px panel from the right, over the page. It never resizes the text column. It closes from the button that opened it, even when that button is folded into the menu, with Escape, or with a press on the text or the page behind it, and that same press still selects or seeks. Pressing the top-right controls, the player or the word popup leaves it open.
 
 - **Settings (`Aa`):** colour scheme, font, text size, line spacing, language status, your own language, and the library and help links.
 - **Saved words (star):** see above.

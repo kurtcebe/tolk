@@ -72,7 +72,7 @@ export function mountDrawerToggles(): void {
     const drawer = openDrawerNow();
     if (drawer !== undefined) {
       setOpenDrawer(null);
-      requireElement(drawer.button).focus();
+      focusOpener(requireElement(drawer.button));
     }
   });
 
@@ -88,6 +88,16 @@ export function mountDrawerToggles(): void {
       setOpenDrawer(null);
     }
   });
+}
+
+/** In a narrow window the opener is folded into the reader's closed menu. */
+function focusOpener(button: HTMLElement): void {
+  const menu = document.getElementById("controls-menu-button");
+  if (!button.checkVisibility() && menu !== null) {
+    menu.focus();
+  } else {
+    button.focus();
+  }
 }
 
 function mountSettings(): void {

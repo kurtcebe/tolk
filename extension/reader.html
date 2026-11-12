@@ -355,7 +355,21 @@
 
     <p id="chapter-flash" class="chapter-flash" role="status" hidden></p>
 
-    <div class="top-controls">
+    <div id="top-controls" class="top-controls">
+      <!-- Shown only when the margin is too narrow for the controls below. -->
+      <button
+        id="controls-menu-button"
+        class="icon-button controls-menu-button"
+        type="button"
+        popovertarget="controls-panel"
+        aria-label="Menu"
+        title="Menu"
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 10h.01M10 10h.01M16 10h.01" />
+        </svg>
+      </button>
+      <div id="controls-panel" class="controls-panel" popover>
       <fieldset class="mode-switch">
         <legend class="visually-hidden">Reading mode</legend>
         <div class="choices">
@@ -434,6 +448,7 @@
       >
         Aa
       </button>
+      </div>
     </div>
   </body>
 </html>

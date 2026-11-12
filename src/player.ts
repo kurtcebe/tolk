@@ -49,9 +49,6 @@ const SNAP_BELOW = -5;
 const SNAP_ABOVE = 2;
 const NUDGE_STEP = 5;
 
-/** The docked panel's 208 px width, its 16 px from the window edge, and a 16 px gap to the text. */
-const MARGIN_NEEDED_PX = 240;
-
 /** Book mode's player is called up by hand. Learner's is always visible. */
 let openInBook = false;
 /** Set when Play is what opened the picker, so picking a voice starts speech. */
@@ -65,7 +62,6 @@ export function mountPlayer(): void {
   mountSpeed();
   mountVoicePicker();
   mountVisibility();
-  mountDock();
   subscribePlayback(renderPlayer);
   subscribeLanguage(renderPlayer);
   subscribeVoices(() => {
@@ -141,19 +137,6 @@ function mountVisibility(): void {
     }
     renderPlayer();
   });
-}
-
-/** The column scales with the text, so the room in the margin depends on both. */
-function mountDock(): void {
-  window.addEventListener("resize", updateDock);
-  subscribe(updateDock);
-}
-
-function updateDock(): void {
-  const root = document.documentElement;
-  const columnRight = requireElement("reader").getBoundingClientRect().right;
-  const fits = root.clientWidth - columnRight >= MARGIN_NEEDED_PX;
-  root.dataset["playerDock"] = fits ? "margin" : "bottom";
 }
 
 function renderPlayer(): void {

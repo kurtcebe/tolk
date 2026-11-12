@@ -22,6 +22,7 @@ import { resolveOpening, showNote } from "./opening.js";
 import { initPlayback } from "./playback.js";
 import { mountPlayer } from "./player.js";
 import { restorePosition, startingChapterIndex, trackPosition } from "./reading-position.js";
+import { mountRightMargin } from "./right-margin.js";
 import { mountSavedMarks } from "./saved-marks.js";
 import { mountSavedWords } from "./saved-words.js";
 import { loadSavedWords, type SavedSource } from "./saved-words-store.js";
@@ -92,6 +93,7 @@ async function showDocument(source: TolkDocument, book: Book | null): Promise<vo
   document.title = source.title;
   loadVoices();
   mountLanguageStatus();
+  mountRightMargin();
   mountPlayer();
   mountShortcuts();
   mountMarginTools();

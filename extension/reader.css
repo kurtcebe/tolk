@@ -820,6 +820,66 @@ svg {
   font-size: 14px;
 }
 
+/* In the reader the controls share one panel. When the right margin has room
+   (right-margin.ts), it's a 208 px block there, the width of the docked player
+   below it. When it hasn't, it folds behind the menu button. */
+
+.controls-menu-button {
+  display: none;
+}
+
+/* A popover, reset so it lays out in place while it isn't acting as one. */
+.controls-panel {
+  position: static;
+  inset: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+:root[data-margin="wide"] .top-controls {
+  width: 208px;
+}
+
+:root[data-margin="wide"] .controls-panel {
+  width: 100%;
+}
+
+:root[data-margin="wide"] .mode-switch,
+.controls-panel:popover-open .mode-switch {
+  flex-basis: 100%;
+}
+
+:root[data-margin="narrow"] .controls-menu-button {
+  display: block;
+}
+
+:root[data-margin="narrow"] .controls-panel:not(:popover-open) {
+  display: none;
+}
+
+/* Four buttons to a row: 4 × 40 px, three 8 px gaps and 12 px of padding a side. */
+.controls-panel:popover-open {
+  position: fixed;
+  inset: calc(var(--controls-bottom, 52px) + 8px) 16px auto auto;
+  width: 208px;
+  max-width: calc(100% - 32px);
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
+}
+
 .mode-switch,
 .setting {
   min-width: 0;
@@ -1176,61 +1236,62 @@ a.icon-button {
 }
 
 /* Docked in the margin under the top-right controls, where it covers no text.
-   player.ts sets this only when the margin has room, because the column scales
-   with the text size. Its width has to stay in step with MARGIN_NEEDED_PX there. */
+   right-margin.ts sets this only when the margin has room, because the column
+   scales with the text size. Its width has to stay in step with MARGIN_NEEDED_PX
+   there. --controls-bottom comes from there too, as the controls' height varies. */
 
-:root[data-player-dock="margin"] .player {
-  top: 64px;
+:root[data-margin="wide"] .player {
+  top: calc(var(--controls-bottom, 52px) + 12px);
   right: 16px;
   bottom: auto;
   left: auto;
   width: 208px;
-  max-height: calc(100vh - 80px);
+  max-height: calc(100vh - var(--controls-bottom, 52px) - 28px);
   overflow-y: auto;
   transform: none;
 }
 
-:root[data-player-dock="margin"] .player-bar {
+:root[data-margin="wide"] .player-bar {
   position: relative;
   gap: 12px;
 }
 
-:root[data-player-dock="margin"] .player-transport {
+:root[data-margin="wide"] .player-transport {
   justify-content: center;
   width: 100%;
 }
 
-:root[data-player-dock="margin"] #player-close {
+:root[data-margin="wide"] #player-close {
   position: absolute;
   top: 8px;
   right: 8px;
 }
 
-:root[data-player-dock="margin"] .player-speed {
+:root[data-margin="wide"] .player-speed {
   flex-basis: 100%;
   min-width: 0;
 }
 
 /* The slider takes the full width, with its end labels on the line below. */
-:root[data-player-dock="margin"] .speed-track {
+:root[data-margin="wide"] .speed-track {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 2px;
 }
 
-:root[data-player-dock="margin"] .speed-slider-wrap {
+:root[data-margin="wide"] .speed-slider-wrap {
   flex-basis: 100%;
   order: -1;
   padding-block: 4px;
 }
 
-:root[data-player-dock="margin"] .voice-button {
+:root[data-margin="wide"] .voice-button {
   width: 100%;
   max-width: none;
 }
 
 /* Last in the stack, so it appearing doesn't move the controls above it. */
-:root[data-player-dock="margin"] .back-button {
+:root[data-margin="wide"] .back-button {
   order: 1;
   width: 100%;
   border-radius: 12px;
@@ -1240,7 +1301,7 @@ a.icon-button {
   anchor-name: --voice-button;
 }
 
-:root[data-player-dock="margin"] .voice-picker {
+:root[data-margin="wide"] .voice-picker {
   position-anchor: --voice-button;
   position-try-fallbacks: flip-block;
   inset: auto;
@@ -1275,7 +1336,8 @@ a.icon-button {
   flex-direction: column;
   gap: 24px;
   width: min(320px, 100%);
-  padding: 72px 16px 24px;
+  /* Starts below the controls, which sit over it. */
+  padding: calc(var(--controls-bottom, 52px) + 20px) 16px 24px;
   overflow-y: auto;
   border-inline-start: 1px solid var(--line);
   background: var(--surface);
