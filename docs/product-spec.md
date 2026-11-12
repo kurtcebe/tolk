@@ -21,6 +21,12 @@ A simple grid of imported books showing cover, title, author and progress. Reade
 
 Books live only in this browser profile, and uninstalling the extension deletes them. The UI has to say so.
 
+## Reading history
+
+How much a reader read, day by day and per language, shown as a calendar in the library. It counts active reading time and words read, in books and live pages alike. There are no goals, streaks or rewards: it's a record, not a game.
+
+Only daily totals are kept, never what was read. It stays in this browser like books do, and a reader can clear it.
+
 ## Reader
 
 Familiar reader conventions, such as font, size, spacing, theme and player controls, with its own visual identity. Don't copy Chrome's icons, artwork or exact styling, and don't use "Chrome" or "Google" in the name or imply endorsement.
@@ -70,7 +76,7 @@ A reader finishes an article or chapter they would otherwise have abandoned, and
 
 ## Privacy
 
-Text goes to models running in the browser, never to a server of ours. Books and saved words stay on the machine. There are no analytics, telemetry or crash reports.
+Text goes to models running in the browser, never to a server of ours. Books, saved words and reading history stay on the machine. There are no analytics, telemetry or crash reports.
 
 Two things can leave the machine, and the store listing must say so:
 

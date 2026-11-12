@@ -34,6 +34,7 @@ A block's `html` is untrusted, whatever its source. `render.ts` parses it in an 
 
 - **Books:** IndexedDB, as original file blobs plus parsed metadata and reading position. `localStorage` is too small and only holds strings. They have their own `tolk-books` database, with the file in a separate store from the details, so saving a position never touches the file and adding books can't put saved words at risk.
 - **Saved words:** IndexedDB, so they stay local. `unlimitedStorage` exempts them from eviction when disk space runs low, and shows no warning at install. A saved word's source is stored by value, so it outlives the book it came from.
+- **Reading history:** IndexedDB, in its own `tolk-history` database, so clearing it can't touch books or saved words. One record per local date and language, holding seconds, words, and seconds per book ID. Nothing about what was read, and live articles are pooled without a URL. Never synced.
 - **Settings:** `chrome.storage.sync`.
 - **Voice choices:** `chrome.storage.local`, so a remote voice picked on one computer never applies on another.
 - **Model output:** in memory only. Don't persist it.
@@ -146,6 +147,15 @@ Detection can finish after the reader is built, and an override can come at any 
 - **Validation:** re-detect the language of Simplify output and retry once, then fail visibly. Validate structured output against what the feature needs too, since a schema guarantees the format and not the truth.
 - **Stale results:** select word A, then B before A resolves, and A's late result must not land in B's popup. Use a generation counter.
 - **Concurrency:** one in-flight request per capability, with a cancellable queue. For translation, `translation.ts` puts a popup ahead of a paragraph, because someone waiting on one word shouldn't wait for a long paragraph. Each request is gated again when its turn comes, and has a timeout, because a request that never answers mustn't block the queue.
+
+## Reading history
+
+`reading-history.ts` counts in the reader and `history-store.ts` keeps the totals.
+
+- **Time:** a one-second tick adds a second while the tab is visible and either speech is playing or there's been a scroll, selection or chapter change in the last 60 seconds. The tick stops while the tab is hidden, rather than ticking and doing nothing.
+- **Words:** a set of chapter, block and word positions per open document. When scrolling settles, the words on screen join it. Speech boundaries add the spoken word. Words read is the set's growth. A block re-tokenized by the mutation path can count some words twice, which is accepted, since the number is a rough measure.
+- **Writes:** totals build in memory and are added to the stored record every 30 seconds, and on `pagehide` and when the tab is hidden. Closing a tab can lose up to the last 30 seconds.
+- **Library:** reads the records for the month shown. The library never writes, apart from clearing.
 
 ## State
 

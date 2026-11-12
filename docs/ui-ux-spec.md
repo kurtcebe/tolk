@@ -37,6 +37,7 @@ One design that shows more or fewer tools. The modes never have separate styling
 | --- | --- | --- |
 | Margin tools | None | On paragraph hover or keyboard focus |
 | Player | Hidden until called up | Always visible |
+| Today's reading | Not shown | One line under the docked player |
 | Saved words | Not marked | Dotted underline |
 | Word popup | Yes | Yes, identical |
 | Text and typography | Identical | Identical |
@@ -165,7 +166,7 @@ Left out of v1: search, tags, editing a translation and filling in blank transla
 
 A separate full page in the same style and colour scheme.
 
-- **Header:** "Your books", Import EPUB, and a permanent notice: "Books are stored in this browser only. Uninstalling Tolk deletes them."
+- **Header:** "Your books", Import EPUB, and a permanent notice: "Books and your reading history are stored in this browser only. Uninstalling Tolk deletes them."
 - **Top right:** the saved words star and a Help link. There's no settings drawer, so colour and type are set in the reader.
 - **Note:** when the icon landed here because a page had no article, a line above the header says why.
 - **Grid:** cover, title, author and progress, with the most recently read first. Progress shows a bar with a percentage, or "New".
@@ -179,6 +180,27 @@ Import problems appear on the card with a Remove button, so a failure can't be m
 
 - **DRM:** "This book is copy-protected, so Tolk can't open it."
 - **Invalid file:** "This file couldn't be read as an EPUB."
+
+### Your reading
+
+A section above "Your books", hidden until there's a day with history.
+
+- **Calendar:** one month, weeks starting on the browser's locale's first day, with ‹ and › to move between months. It goes back to the first month with history, and no further forward than this month.
+- **Days:** each day is shaded in one of four levels, from none to a lot, scaled to the month's busiest day, so a light reader's calendar fills in as much as a heavy one's. Today has a ring. A day under a minute shows as none. Each day's accessible name says the date and its time, such as "12 November, 34 minutes".
+- **Chosen day:** today, until another day is chosen. Below the calendar, its time and words per language, such as "Dutch · 34 min · 4,120 words", and the titles of the books read that day. A live article shows as "Articles", without its title.
+- **Month total:** time and words for the month shown, across all languages.
+- **Clear reading history:** a quiet button at the end of the section, with confirmation inline: "Clear all your reading history? Your books and saved words stay." Clearing hides the section.
+
+### Today's reading in the reader
+
+In Learner, one line under the docked player: "Today · 18 min · 2,340 words", for the text's language. It shows from the first counted minute of the day, and updates once a minute rather than ticking. It isn't shown while the player is the bar at the bottom of the window, or in Book mode, or while the language is Unknown. It never covers text, because it lives in the margin with the player.
+
+### What counts
+
+- **Time:** while the reader tab is visible and the reader has scrolled, selected text or changed chapter in the last 60 seconds, or while speech is playing. A tab left open in front doesn't count once that minute runs out.
+- **Words:** a word counts once per open book or article, the first time it's on screen while time is counting, or when it's spoken. Scrolling back over it doesn't count it again.
+- **Language:** the text's current language, including a language the reader chose by hand. Nothing counts while it's Unknown.
+- **Day:** the computer's local date. Reading past midnight counts towards the new day from then on.
 
 ## Drawer
 

@@ -48,6 +48,8 @@ Import, sanitising, chapter rendering, navigation, reading position, and the lib
 
 ## After v1
 
+**Reading history** isn't an AI feature, so it doesn't wait for the others. **Verify:** time stops a minute after the last scroll with no speech, and while the tab is hidden. Speech keeps it counting with no scrolling. A day's totals match a timed session to within a minute. The calendar reads correctly by keyboard and screen reader, and clearing leaves books and saved words untouched.
+
 Simplify, Explain, word cards, Read it back to me, recaps, chapter checks, and picture descriptions, in that order. See `product-spec.md`.
 
 **Simplify** goes through the single mutation path. **Verify:** simplifying during playback keeps the highlight aligned, revert is instant, and numbers in the source survive the rewrite.
