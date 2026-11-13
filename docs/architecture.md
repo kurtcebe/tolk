@@ -153,7 +153,7 @@ Detection can finish after the reader is built, and an override can come at any 
 `reading-history.ts` counts in the reader and `history-store.ts` keeps the totals.
 
 - **Time:** a one-second tick adds a second while the tab is visible and either speech is playing or there's been a scroll, selection or chapter change in the last 60 seconds. The tick stops while the tab is hidden, rather than ticking and doing nothing.
-- **Words:** a set of chapter, block and word positions per open document. When scrolling settles, the words on screen join it. Speech boundaries add the spoken word. Words read is the set's growth. A block re-tokenized by the mutation path can count some words twice, which is accepted, since the number is a rough measure.
+- **Words:** a set of chapter, block and word positions per open document. When scrolling settles, and every 5 seconds while time counts, the words on screen join it. While speech plays, each tick adds the sentence being spoken, since speech doesn't tell listeners about each word. Words read is the set's growth. A block re-tokenized by the mutation path can count some words twice, which is accepted, since the number is a rough measure.
 - **Writes:** totals build in memory and are added to the stored record every 30 seconds, and on `pagehide` and when the tab is hidden. Closing a tab can lose up to the last 30 seconds.
 - **Library:** reads the records for the month shown. The library never writes, apart from clearing.
 

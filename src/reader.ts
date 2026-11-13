@@ -21,6 +21,7 @@ import { mountMarginTools } from "./margin-tools.js";
 import { resolveOpening, showNote } from "./opening.js";
 import { initPlayback } from "./playback.js";
 import { mountPlayer } from "./player.js";
+import { trackReadingHistory } from "./reading-history.js";
 import { restorePosition, startingChapterIndex, trackPosition } from "./reading-position.js";
 import { mountRightMargin } from "./right-margin.js";
 import { mountSavedMarks } from "./saved-marks.js";
@@ -95,6 +96,7 @@ async function showDocument(source: TolkDocument, book: Book | null): Promise<vo
   mountLanguageStatus();
   mountRightMargin();
   mountPlayer();
+  trackReadingHistory(book?.id ?? null);
   mountShortcuts();
   mountMarginTools();
   mountWordPopup(savedSourceOf(source));
