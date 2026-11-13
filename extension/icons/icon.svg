@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <!-- Tolk icon. The t is Literata (SIL OFL 1.1) at opsz 12, weight 700, converted to an outline. -->
+  <rect width="96" height="96" rx="20" fill="#1F4E79"/>
+  <path transform="translate(29.69 68) scale(0.0797 -0.0797)" fill="#FBF8F1" d="M257 -14Q205 -14 169.7 3.3Q134.5 20.5 116.5 55.3Q98.5 90 98.5 141.5V423H26V498.5Q70.5 505 96.3 525Q122 545 135 582.5Q148 620 153 677L240 688.5L257.5 680V512H399.5V423H257.5V168.5Q257.5 132.5 270.3 113Q283 93.5 316.5 93.5Q338 93.5 358.8 100.5Q379.5 107.5 399.5 120L433.5 58Q402 26.5 358 6.3Q314 -14 257 -14Z"/>
+  <rect x="25" y="74" width="46" height="8" rx="4" fill="#9CC2E8"/>
+</svg>
