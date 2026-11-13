@@ -13,6 +13,7 @@ import { requireElement } from "./controls.js";
 import { mountDrawerToggles } from "./drawer.js";
 import { EpubError, type EpubProblem } from "./epub.js";
 import { openBook } from "./epub-document.js";
+import { mountReadingHistory, refreshHistory, renderHistory } from "./library-history.js";
 import { isLibraryNote, LIBRARY_NOTES } from "./library-notes.js";
 import { mountSavedWords } from "./saved-words.js";
 import { loadSavedWords } from "./saved-words-store.js";
@@ -50,10 +51,12 @@ async function start(): Promise<void> {
     mountSavedWords();
     void loadSavedWords();
     mountImport();
+    mountReadingHistory((bookId) => books.find((book) => book.id === bookId)?.title ?? null);
     subscribeBooks(() => void refresh());
     // Coming back from a book through the Back button doesn't reload this page.
     window.addEventListener("pageshow", () => void refresh());
     await refresh();
+    await refreshHistory();
     await document.fonts.ready;
   } finally {
     document.documentElement.dataset["ready"] = "true";
@@ -180,6 +183,8 @@ function render(): void {
     ...imports.map(renderImport),
     ...sorted.map(renderBook),
   );
+  // The chosen day names the books read, which may just have changed.
+  renderHistory();
 }
 
 function lastUsed(book: Book): number {

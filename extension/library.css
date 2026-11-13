@@ -200,3 +200,149 @@
   width: auto;
   padding-inline: 10px;
 }
+
+/* Your reading: a month calendar beside the chosen day's totals. Shading is
+   the accent mixed into the surface, so it follows every colour scheme. */
+
+.history {
+  margin-bottom: 48px;
+}
+
+.history-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.history-head h2 {
+  margin: 0;
+  font-family: var(--reading-font);
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+.history-months {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-month-name {
+  min-width: 9em;
+  margin: 0;
+  text-align: center;
+}
+
+.history-months .icon-button[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.history-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 48px;
+}
+
+.history-calendar {
+  border-collapse: separate;
+  border-spacing: 4px;
+  margin: -4px;
+}
+
+.history-calendar th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.history-day-button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.history-day-button[data-level="1"] {
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface));
+}
+
+.history-day-button[data-level="2"] {
+  background: color-mix(in srgb, var(--accent) 45%, var(--surface));
+}
+
+.history-day-button[data-level="3"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.history-day-button[aria-current="date"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.history-day-button[aria-pressed="true"] {
+  border-color: var(--text);
+  font-weight: 700;
+}
+
+.history-day-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.history-details {
+  display: flex;
+  flex: 1 1 240px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.history-day-title {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.history-day-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-day-books,
+.history-month-total {
+  margin: 0;
+  color: var(--muted);
+}
+
+.history-month-total {
+  margin-top: 8px;
+}
+
+.history-clear {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.history-clear-question {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.history-clear-question p {
+  margin: 0;
+}

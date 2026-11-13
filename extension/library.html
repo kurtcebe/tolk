@@ -12,12 +12,64 @@
   <body>
     <main class="library">
       <p id="library-note" class="library-note" role="status" hidden></p>
+      <section
+        id="history"
+        class="history"
+        aria-labelledby="history-title"
+        hidden
+      >
+        <div class="history-head">
+          <h2 id="history-title">Your reading</h2>
+          <div class="history-months">
+            <button
+              id="history-previous"
+              class="icon-button"
+              type="button"
+              aria-label="Previous month"
+            >
+              ‹
+            </button>
+            <p id="history-month-name" class="history-month-name" aria-live="polite"></p>
+            <button
+              id="history-next"
+              class="icon-button"
+              type="button"
+              aria-label="Next month"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+        <div class="history-body">
+          <table id="history-calendar" class="history-calendar"></table>
+          <div class="history-details">
+            <h3 id="history-day-title" class="history-day-title"></h3>
+            <ul id="history-day-list" class="history-day-list"></ul>
+            <p id="history-day-empty" class="status-note">Nothing read on this day.</p>
+            <p id="history-day-books" class="history-day-books" hidden></p>
+            <p id="history-month-total" class="history-month-total"></p>
+            <button id="history-clear" class="link-button history-clear" type="button">
+              Clear reading history
+            </button>
+            <div id="history-clear-question" class="history-clear-question" hidden>
+              <p>Clear all your reading history? Your books and saved words stay.</p>
+              <button id="history-clear-confirm" class="link-button" type="button">
+                Clear
+              </button>
+              <button id="history-clear-cancel" class="link-button" type="button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
       <header class="library-header">
         <h1>Your books</h1>
         <div id="library-actions" class="library-actions">
           <button class="import-button" type="button">Import EPUB</button>
           <p class="status-note">
-            Books are stored in this browser only. Uninstalling Tolk deletes them.
+            Books and your reading history are stored in this browser only.
+            Uninstalling Tolk deletes them.
           </p>
         </div>
       </header>
@@ -26,7 +78,8 @@
         <p>Drop an EPUB here</p>
         <button class="import-button" type="button">Import EPUB</button>
         <p class="status-note">
-          Books are stored in this browser only. Uninstalling Tolk deletes them.
+          Books and your reading history are stored in this browser only.
+            Uninstalling Tolk deletes them.
         </p>
       </section>
       <div id="library-grid" class="library-grid"></div>
