@@ -7,7 +7,7 @@ import type { RawArticle } from "./article-store.js";
 
 /** Provided at runtime by extension/vendor/Readability.js. */
 declare class Readability {
-  constructor(document: Document);
+  constructor(document: Document, options?: { serializer?: (element: Element) => string });
   parse(): {
     title?: string | null;
     byline?: string | null;
@@ -24,7 +24,22 @@ export function extractArticle(): RawArticle | null {
   try {
     // Readability rewrites what it's given, and the original tab must stay as it was.
     const clone = document.cloneNode(true) as Document;
-    const parsed = new Readability(clone).parse();
+    // Styles and handlers are never used, and in the reader the page's CSP would
+    // block and report them when the HTML is parsed. So they go here, on the clone.
+    const serializer = (element: Element): string => {
+      for (const style of element.querySelectorAll("style")) {
+        style.remove();
+      }
+      for (const node of element.querySelectorAll("*")) {
+        for (const name of node.getAttributeNames()) {
+          if (name === "style" || name.startsWith("on")) {
+            node.removeAttribute(name);
+          }
+        }
+      }
+      return element.innerHTML;
+    };
+    const parsed = new Readability(clone, { serializer }).parse();
     const content = parsed?.content ?? "";
     const length = parsed?.textContent?.trim().length ?? 0;
     if (content === "" || length < MIN_ARTICLE_CHARACTERS) {
