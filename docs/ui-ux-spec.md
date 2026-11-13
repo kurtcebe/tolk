@@ -206,7 +206,7 @@ In Learner, one line under the docked player: "Today · 18 min · 2,340 words", 
 
 A 320 px panel from the right, over the page. It never resizes the text column. It closes from the button that opened it, even when that button is folded into the menu, with Escape, or with a press on the text or the page behind it, and that same press still selects or seeks. Pressing the top-right controls, the player or the word popup leaves it open.
 
-- **Settings (`Aa`):** colour scheme, font, text size, line spacing, language status, your own language, and the library and help links.
+- **Settings (`Aa`):** colour scheme, font, text size, line spacing, language status, your own language, and the library and help links, with the Tolk icon and name at the very bottom.
 - **Saved words (star):** see above.
 - **Contents (list icon, books only):** the chapter list, with the current chapter marked.
 
@@ -311,6 +311,13 @@ Light, Sepia, Dark and Dim. It follows the system's light or dark setting until 
 | Active tool | `#DCE6F0` | `#D5D8D0` | `#2F3C4A` | `#36404B` |
 
 The highlights were judged by eye in a mockup, so check them again in the real reader and on real text in each scheme.
+
+### Extension icon
+
+A lowercase Literata *t* in paper on an ink-blue rounded square, with a pale-blue bar under it like the current-word highlight. The *t* is an outline, so the icon needs no font.
+
+- **Files:** `extension/icons/`. `icon.svg` is the source, and `icon-16.svg` moves the bar onto a whole pixel row so it stays sharp at 16 px. The PNGs are rendered from them with `rsvg-convert` (`brew install librsvg`); the 128 px one has 16 px of clear space on each side, as the Chrome Web Store asks.
+- **Where:** the toolbar, Chrome's extension pages, beside the help page's heading and at the bottom of the settings drawer. Not in the reader's text area or the library.
 
 ### Icons
 
