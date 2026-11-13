@@ -1539,3 +1539,18 @@ a.icon-button {
   opacity: 0.5;
   cursor: default;
 }
+
+/* Today's reading, under the docked player in Learner. The bottom bar has no room
+   for it, so it only shows in the margin, where it covers no text. */
+
+.today-reading {
+  width: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+:root:not([data-margin="wide"]) .today-reading {
+  display: none;
+}

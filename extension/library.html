@@ -18,30 +18,30 @@
         aria-labelledby="history-title"
         hidden
       >
-        <div class="history-head">
-          <h2 id="history-title">Your reading</h2>
-          <div class="history-months">
-            <button
-              id="history-previous"
-              class="icon-button"
-              type="button"
-              aria-label="Previous month"
-            >
-              ‹
-            </button>
-            <p id="history-month-name" class="history-month-name" aria-live="polite"></p>
-            <button
-              id="history-next"
-              class="icon-button"
-              type="button"
-              aria-label="Next month"
-            >
-              ›
-            </button>
-          </div>
-        </div>
+        <h2 id="history-title" class="history-title">Your reading</h2>
         <div class="history-body">
-          <table id="history-calendar" class="history-calendar"></table>
+          <div class="history-month">
+            <div id="history-months" class="history-months">
+              <button
+                id="history-previous"
+                class="icon-button"
+                type="button"
+                aria-label="Previous month"
+              >
+                ‹
+              </button>
+              <p id="history-month-name" class="history-month-name" aria-live="polite"></p>
+              <button
+                id="history-next"
+                class="icon-button"
+                type="button"
+                aria-label="Next month"
+              >
+                ›
+              </button>
+            </div>
+            <table id="history-calendar" class="history-calendar"></table>
+          </div>
           <div class="history-details">
             <h3 id="history-day-title" class="history-day-title"></h3>
             <ul id="history-day-list" class="history-day-list"></ul>

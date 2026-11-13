@@ -5,10 +5,9 @@
 import { requireElement } from "./controls.js";
 import { clearHistory, firstDate, localDate, readDays, type DayTotals } from "./history-store.js";
 import { languageName } from "./languages.js";
+import { formatDuration, formatWords, UI_LOCALE } from "./reading-format.js";
 import { isRecord } from "./state.js";
 
-/** The UI is in British English, so dates read "12 November". */
-const UI_LOCALE = "en-GB";
 const LEVELS = 3;
 const MINUTE = 60;
 
@@ -88,8 +87,15 @@ function renderMonthControls(): void {
     month: "long",
     year: "numeric",
   }).format(shown);
-  requireElement("history-previous").setAttribute("aria-disabled", String(!canMove(-1)));
-  requireElement("history-next").setAttribute("aria-disabled", String(!canMove(1)));
+  const previous = requireElement("history-previous");
+  const next = requireElement("history-next");
+  if (!(previous instanceof HTMLButtonElement) || !(next instanceof HTMLButtonElement)) {
+    return;
+  }
+  previous.disabled = !canMove(-1);
+  next.disabled = !canMove(1);
+  // With only one month of history there's nowhere to go, so the arrows step aside.
+  requireElement("history-months").dataset["single"] = String(previous.disabled && next.disabled);
 }
 
 function renderCalendar(): void {
@@ -134,7 +140,7 @@ function renderCalendar(): void {
     button.dataset["level"] = String(level(seconds, busiest));
     button.setAttribute(
       "aria-label",
-      `${dayLabel.format(new Date(year, month, dayNumber))}, ${duration(seconds)}`,
+      `${dayLabel.format(new Date(year, month, dayNumber))}, ${formatDuration(seconds)}`,
     );
     button.setAttribute("aria-pressed", String(date === chosen));
     if (date === today) {
@@ -188,8 +194,8 @@ function renderChosenDay(): void {
         const item = document.createElement("li");
         item.textContent = [
           languageName(entry.language),
-          duration(entry.seconds),
-          words(entry.words),
+          formatDuration(entry.seconds),
+          formatWords(entry.words),
         ].join(" · ");
         return item;
       }),
@@ -223,7 +229,7 @@ function renderMonthTotal(): void {
   const wordCount = days.reduce((sum, entry) => sum + entry.words, 0);
   const name = new Intl.DateTimeFormat(UI_LOCALE, { month: "long" }).format(shown);
   requireElement("history-month-total").textContent =
-    seconds === 0 ? `Nothing read in ${name}.` : `${name} · ${duration(seconds)} · ${words(wordCount)}`;
+    seconds === 0 ? `Nothing read in ${name}.` : `${name} · ${formatDuration(seconds)} · ${formatWords(wordCount)}`;
 }
 
 function confirmClear(asking: boolean): void {
@@ -273,23 +279,6 @@ function level(seconds: number, busiest: number): number {
     return 0;
   }
   return Math.min(LEVELS, Math.max(1, Math.ceil((seconds / busiest) * LEVELS)));
-}
-
-function duration(seconds: number): string {
-  const minutes = Math.floor(seconds / MINUTE);
-  if (minutes === 0) {
-    return seconds === 0 ? "nothing read" : "under a minute";
-  }
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (hours === 0) {
-    return `${minutes} min`;
-  }
-  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
-}
-
-function words(count: number): string {
-  return `${count.toLocaleString(UI_LOCALE)} ${count === 1 ? "word" : "words"}`;
 }
 
 function firstOfMonth(when: Date): Date {

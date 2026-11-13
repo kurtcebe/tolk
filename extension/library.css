@@ -208,37 +208,44 @@
   margin-bottom: 48px;
 }
 
-.history-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  margin-bottom: 16px;
-}
-
-.history-head h2 {
-  margin: 0;
+.history-title {
+  margin: 0 0 16px;
   font-family: var(--reading-font);
   font-size: 1.4em;
   font-weight: 600;
 }
 
+/* The month's name and arrows sit right above the calendar, at its width. */
+.history-month {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .history-months {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
 .history-month-name {
-  min-width: 9em;
   margin: 0;
+  font-weight: 600;
   text-align: center;
 }
 
-.history-months .icon-button[aria-disabled="true"] {
-  opacity: 0.4;
+.history-months .icon-button:disabled {
+  opacity: 0.3;
   cursor: default;
+}
+
+.history-months .icon-button:disabled:hover {
+  background: var(--surface);
+}
+
+.history-months[data-single="true"] .icon-button {
+  visibility: hidden;
 }
 
 .history-body {

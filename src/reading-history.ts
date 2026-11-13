@@ -1,20 +1,28 @@
 // Counts active reading time and words read in the reader, and adds them to the
 // day's totals in history-store.ts. Time counts while the tab is visible and the
 // reader did something in the last minute, or while speech plays. Only totals
-// are kept, never what was read.
+// are kept, never what was read. In Learner, a line under the docked player shows
+// today's totals for the text's language.
 
 import { getChapterIndex, subscribeChapter } from "./chapter-view.js";
+import { requireElement } from "./controls.js";
 import { getLanguage, subscribeLanguage } from "./document-language.js";
-import { addToDay, localDate } from "./history-store.js";
+import { addToDay, localDate, readDay } from "./history-store.js";
 import { languageKey } from "./languages.js";
 import { getBlocks, getCurrentWord, getStatus } from "./playback.js";
+import { formatDuration, formatWords } from "./reading-format.js";
+import { getSettings, subscribe } from "./state.js";
 
 const TICK_MS = 1000;
 const ACTIVE_FOR_MS = 60_000;
 const SAVE_EVERY_TICKS = 30;
 const LOOK_EVERY_TICKS = 5;
 const SCROLL_SETTLE_MS = 300;
+/** The Learner line updates once a minute, rather than ticking. */
+const SHOW_EVERY_TICKS = 60;
+const MINUTE = 60;
 
+/** A day's totals for one language, whether saved or still being counted. */
 interface Pending {
   date: string;
   language: string;
@@ -31,6 +39,9 @@ let lastActive = 0;
 let ticker = 0;
 let ticks = 0;
 let saving: Promise<void> = Promise.resolve();
+/** Today's saved totals for the text's language, as last read from the store. */
+let stored: Pending | null = null;
+let loadingToday = false;
 
 /** `bookId` is null for a live article. */
 export function trackReadingHistory(book: string | null): void {
@@ -49,13 +60,20 @@ export function trackReadingHistory(book: string | null): void {
     lookAtScreen();
   });
   // Time read so far belongs to the language it was read in.
-  subscribeLanguage(() => void save());
+  subscribeLanguage(() => {
+    void save();
+    renderToday();
+  });
+  subscribe(renderToday);
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       stopTicking();
       void save();
     } else {
+      // Another tab may have added to today meanwhile.
+      stored = null;
+      renderToday();
       startTicking();
     }
   });
@@ -93,6 +111,9 @@ function tick(): void {
         lookAtScreen();
       }
     }
+  }
+  if (ticks % SHOW_EVERY_TICKS === 0) {
+    renderToday();
   }
   if (ticks % SAVE_EVERY_TICKS === 0) {
     void save();
@@ -176,6 +197,14 @@ function save(): Promise<void> {
   const toSave = pending;
   pending = null;
   if (toSave !== null && (toSave.seconds > 0 || toSave.words > 0)) {
+    // Counted into today straight away, so the line doesn't dip while it's written.
+    if (stored !== null && stored.date === toSave.date && stored.language === toSave.language) {
+      stored = {
+        ...stored,
+        seconds: stored.seconds + toSave.seconds,
+        words: stored.words + toSave.words,
+      };
+    }
     saving = writeAfter(saving, toSave);
   }
   return saving;
@@ -193,4 +222,54 @@ async function write(totals: Pending): Promise<void> {
     // Reading carries on. The time is lost, which is better than counting it twice.
     console.warn("Couldn't save reading history.", error);
   }
+}
+
+/** "Today · 18 min · 2,340 words", in Learner, once there's a minute of it. */
+function renderToday(): void {
+  const line = requireElement("today-reading");
+  const totals = getSettings().mode === "learner" ? todayTotals() : null;
+  const show = totals !== null && totals.seconds >= MINUTE;
+  line.hidden = !show;
+  if (show) {
+    line.textContent = `Today · ${formatDuration(totals.seconds)} · ${formatWords(totals.words)}`;
+  }
+}
+
+/** Saved plus still counting, or null while the language is Unknown or today is loading. */
+function todayTotals(): { seconds: number; words: number } | null {
+  const tag = getLanguage();
+  if (tag === null) {
+    return null;
+  }
+  const date = localDate(new Date());
+  const language = languageKey(tag);
+  if (stored === null || stored.date !== date || stored.language !== language) {
+    void loadToday(date, language);
+    return null;
+  }
+  const counting =
+    pending !== null && pending.date === date && pending.language === language ? pending : null;
+  return {
+    seconds: stored.seconds + (counting?.seconds ?? 0),
+    words: stored.words + (counting?.words ?? 0),
+  };
+}
+
+async function loadToday(date: string, language: string): Promise<void> {
+  if (loadingToday) {
+    return;
+  }
+  loadingToday = true;
+  try {
+    // Writes already on their way land first, so they're in what comes back.
+    await saving;
+    const day = await readDay(date, language);
+    stored = { date, language, seconds: day?.seconds ?? 0, words: day?.words ?? 0 };
+  } catch (error) {
+    console.warn("Couldn't read today's reading.", error);
+    return;
+  } finally {
+    loadingToday = false;
+  }
+  renderToday();
 }
