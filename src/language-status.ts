@@ -134,7 +134,7 @@ function renderDetection(language: string | null): void {
     }
     return failed
       ? [`${DOWNLOAD_FAILED} `, downloadButton("Try again", () => detectionStatus.download())]
-      : [downloadButton("Download language detection", () => detectionStatus.download())];
+      : [downloadButton("Download language detection", () => detectionStatus.download()), " ", downloadsLink()];
   });
 }
 
@@ -148,9 +148,15 @@ function renderTranslation(language: string | null): void {
   const hidden = !hasTranslationPair();
   row.hidden = hidden;
 
-  note.hidden = hidden || state !== "unavailable";
+  note.hidden = hidden || language === null || state === "checking" || state === "available";
   if (!note.hidden && language !== null) {
-    note.textContent = `Translation from ${languageName(language)} to ${languageName(own)} isn't available on this device. ${INTERNALS_NOTE}`;
+    renderOnce(note, `${state}|${language}|${own}`, () =>
+      state === "unavailable"
+        ? [
+            `Translation from ${languageName(language)} to ${languageName(own)} isn't available on this device. ${INTERNALS_NOTE}`,
+          ]
+        : [downloadsLink()],
+    );
   }
 
   renderOnce(value, `${state}|${progress}|${failed}`, () => {
@@ -195,6 +201,15 @@ function describeVoices(): string {
 
 function progressText(progress: number | null): string {
   return progress === null ? "…" : ` ${Math.round(progress * 100)}%`;
+}
+
+/** Help's Downloads section says what Chrome fetches, its size and who removes it. */
+function downloadsLink(): HTMLAnchorElement {
+  const link = document.createElement("a");
+  link.href = "help.html#downloads";
+  link.target = "_blank";
+  link.textContent = "What Chrome downloads";
+  return link;
 }
 
 function downloadButton(label: string, start: () => Promise<void>): HTMLButtonElement {

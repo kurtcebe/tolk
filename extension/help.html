@@ -34,6 +34,7 @@
           <li><a href="#saved-words">Saved words</a></li>
           <li><a href="#history">Your reading</a></li>
           <li><a href="#languages">Languages</a></li>
+          <li><a href="#downloads">Downloads</a></li>
           <li><a href="#shortcuts">Keyboard shortcuts</a></li>
           <li><a href="#privacy">Privacy</a></li>
         </ul>
@@ -368,6 +369,48 @@
         </li>
       </ul>
 
+      <h2 id="downloads">Downloads</h2>
+      <p>
+        Tolk downloads nothing itself. When translation or language detection
+        needs a part that isn't on your computer yet, Chrome fetches it from
+        Google, and only after you click. Your reading isn't sent with it.
+      </p>
+      <ul>
+        <li>
+          <strong>A language pack for translation:</strong> starts when you
+          choose <em>Download</em> next to Translation in the settings, or
+          <em>Translate</em> on a paragraph. Selecting text never starts it. On
+          one Mac in November 2026, a pack took about 80 MB for each language,
+          plus about 25 MB once for Chrome's translation engine. Translating
+          between two languages that aren't English may need a pack for each.
+        </li>
+        <li>
+          <strong>Language detection:</strong> starts only when you choose
+          <em>Download language detection</em> in the settings, which shows
+          when Chrome needs it to tell what language the text is in. It's very
+          small, and Chrome often has it already.
+        </li>
+        <li>
+          <strong>Voices</strong> aren't downloaded by Tolk. See
+          <a href="#voices">Voices</a> for adding one.
+        </li>
+      </ul>
+      <p>
+        Chrome doesn't publish these sizes, and they change with its updates.
+        Tolk doesn't use Chrome's larger AI model, which takes several
+        gigabytes. If <code>chrome://on-device-internals</code> shows it on
+        your computer, something other than Tolk asked for it.
+      </p>
+
+      <h3>Removing downloads</h3>
+      <p>
+        Chrome looks after these downloads, not Tolk. Neither Chrome's settings
+        nor its tools for extensions offer a way to delete them, and
+        uninstalling Tolk leaves them, because other sites can use them too.
+        Chrome may remove them by itself, for example when free disk space runs
+        low. If that happens, the settings show <em>Needs download</em> again.
+      </p>
+
       <h2 id="shortcuts">Keyboard shortcuts</h2>
       <p>
         These work while the player is visible, except when you're in a control
@@ -422,7 +465,9 @@
         <li>
           If you choose a download, Chrome fetches that language model from
           Google. Your reading isn't sent with it, and detecting a language and
-          translating both happen on this device.
+          translating both happen on this device. See
+          <a href="#downloads">Downloads</a> for what's fetched and how much
+          space it takes.
         </li>
         <li>
           Saved words stay in this browser and never go to your Google account.
