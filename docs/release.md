@@ -13,7 +13,7 @@ The scripts write to `dist/`, which is gitignored. Finished release files are ke
 ## Before every release
 
 1. On `main`, raise the version in both files.
-2. Run `npm run package`. It recompiles from scratch and writes `dist/tolk-<version>.zip`.
+2. Run `npm run package`. It recompiles from scratch and writes `dist/tolk-<version>.zip`. Delete any older zips in `dist/`, so the wrong one can't be uploaded.
 3. Unzip it into a new folder, and load that folder unpacked in a fresh Chrome profile, so no settings or books carry over. Then run a full pass:
    - an article, and a page with no article
    - importing an EPUB, and opening it from the library
@@ -27,7 +27,8 @@ The scripts write to `dist/`, which is gitignored. Finished release files are ke
 ## Publishing
 
 1. Push `main` to GitHub, without a tag yet. The listing's homepage, support and privacy links point there, so this has to happen before submitting. Before the first push, check the history for anything private: tickets and `CLAUDE.local.md` are gitignored, and commits use the noreply address.
-2. In the [developer dashboard](https://chrome.google.com/webstore/devconsole), upload the zip. For a new item, choose *Add new item*. For an update, use the item's Package tab.
+2. In the [developer dashboard](https://chrome.google.com/webstore/devconsole), upload the zip. For a new item, choose *Add new item*. For an update, use the item's Package tab. Then check that the Package tab shows the version you raised in step 1. Once an item is submitted, its package can't be changed without cancelling the review, which goes back to the end of the queue.
+   After that, copy the zip into `tolk-dist/releases/` with its SHA-256, and commit it there.
 3. Fill in or check Store listing, Privacy, Distribution and Test instructions, using the text below.
 4. Choose *Submit for review*, and **untick publishing automatically** in the confirm dialog. After review, there are 30 days to publish before the submission goes back to draft.
 5. When it passes, install the staged version in a fresh profile if the dashboard offers it, then publish.
