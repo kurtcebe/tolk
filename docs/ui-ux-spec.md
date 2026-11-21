@@ -183,13 +183,42 @@ Import problems appear on the card with a Remove button, so a failure can't be m
 
 ### Your reading
 
-A section above "Your books", hidden until there's a day with history.
+A section above "Your books", hidden until there's a day with history. The aquarium comes first, then the calendar.
 
 - **Calendar:** one month, weeks starting on the browser's locale's first day, with ‹ and › to move between months. It goes back to the first month with history, and no further forward than this month.
 - **Days:** each day is shaded in one of four levels, from none to a lot, scaled to the month's busiest day, so a light reader's calendar fills in as much as a heavy one's. Today has a ring. A day under a minute shows as none. Each day's accessible name says the date and its time, such as "12 November, 34 minutes".
 - **Chosen day:** today, until another day is chosen. Below the calendar, its time and words per language, such as "Dutch · 34 min · 4,120 words", and the titles of the books read that day. A live article shows as "Articles", without its title.
 - **Month total:** time and words for the month shown, across all languages.
-- **Clear reading history:** a quiet button at the end of the section, with confirmation inline: "Clear all your reading history? Your books and saved words stay." Clearing hides the section.
+- **Clear reading history:** a quiet button at the end of the section, with confirmation inline: "Clear all your reading history? Your books and saved words stay." Clearing hides the section, and empties the aquarium of fish, plants and shells.
+
+### Aquarium
+
+A tank of water the full width of the section and 200 px tall, showing the last 30 days at a glance. It's drawn on one canvas, and it never moves anything else on the page.
+
+- **Fish:** one for each day in the last 30, today included, with at least a minute of reading. A day's fish leaves once the day is more than 30 days old, so a reader who reads every day keeps 30 fish. A new fish for today appears the next time the library opens or is shown again.
+- **Fish colour:** books and live articles each have a colour. A day with both gets a two-colour fish, the head in one colour and the tail in the other, split along the body by each one's share of that day's time; a source under 10% of the day is left out, so a split is always visible. How strong the colour is follows the day's time: pale at 1 minute, rising to full at 60 minutes, and full beyond that. The scale is fixed, so a fish keeps its colour for its whole life.
+- **Depth:** three layers. Back fish are smaller, slower and hazier, middle fish are the normal size, and front fish are larger and pass in front of everything except the front plants. Each fish is given a layer when it appears and keeps it.
+- **Swimming:** each fish swims in long, unhurried runs, turning before it reaches the glass. Fish flee a pointer that comes near them, then go back to swimming. A fish only ever faces the way it's going.
+- **Plants:** grow from the floor, at the back and the front, with the streak (see What counts). Nothing at 0 or 1 days, a sprout at 3, a full plant at 7, a second at 14, and a full tank at 30. Between those points they grow a little each day. When a streak breaks, they shrink back a stage a day rather than vanishing, so a missed day costs little. They sway gently.
+- **Bubbles:** rise from the floor, more often the more words were saved in the last 30 days. None when no words were saved, and the rate stops rising at 100 words.
+- **Shells:** one rests on the floor for each book ever finished, in the order they were finished. A shell stays when its book is removed from the library, and only clearing reading history removes it. Past 30 shells, the floor holds 30 and the count line still gives the full number.
+- **Count line:** under the tank, in muted text, such as "18 fish · 5-day streak · 42 words saved · 2 books finished". Parts that are zero are left out, except fish. The same line is the tank's accessible name, so a screen reader hears it instead of the picture.
+- **No fish:** when there's older history but no reading in the last 30 days, the tank has water, any remaining plants and the shells, and the count line reads "No fish yet. Read for a minute today to add one."
+- **Reduced motion:** with `prefers-reduced-motion`, the tank is drawn once and stays still: fish where they are, no bubbles, no swaying, no flicker in the light.
+- **Off screen:** the tank stops drawing while it's scrolled out of view or the tab is hidden.
+- **Light:** two soft rays of light fall from the surface and flicker slowly. The water's colour shifts gently from top to bottom.
+
+Colours, per scheme. Water is a top-to-bottom gradient; the fish colours are at full strength and fade towards the water's own colour at less time. These were chosen without seeing them on the page, so check them by eye in each scheme.
+
+| Token | Light | Sepia | Dark | Dim |
+| --- | --- | --- | --- | --- |
+| Water, top | `#CFE3EE` | `#D6DFD2` | `#1C3346` | `#253847` |
+| Water, bottom | `#7FA9C4` | `#93A99E` | `#0F1C28` | `#18242E` |
+| Floor | `#D9CBAE` | `#C9B48F` | `#2B2A26` | `#34332E` |
+| Book fish | `#E07A2E` | `#C8692A` | `#F0A060` | `#D9955E` |
+| Article fish | `#1F8A86` | `#2A7C73` | `#5CC8BE` | `#6BB3AB` |
+| Plant | `#4E8A4A` | `#5B7D45` | `#4F8C5A` | `#577A5C` |
+| Shell | `#F3E6D8` | `#F1E2C8` | `#C9B9A6` | `#B5A897` |
 
 ### Today's reading in the reader
 
@@ -201,6 +230,9 @@ In Learner, one line under the docked player: "Today · 18 min · 2,340 words", 
 - **Words:** a word counts once per open book or article, the first time it's on screen while time is counting, or when it's spoken. Scrolling back over it doesn't count it again.
 - **Language:** the text's current language, including a language the reader chose by hand. Nothing counts while it's Unknown.
 - **Day:** the computer's local date. Reading past midnight counts towards the new day from then on.
+- **Reading day:** a day with at least a minute of reading, in any language and source.
+- **Streak:** the run of reading days up to today. Today extends it once it's a reading day, but doesn't break it before then, so a streak only breaks when a whole day passes without reading.
+- **Finished book:** the first time the reader reaches the last block of a book's last chapter. Reading it again doesn't count it twice. A finish is part of reading history, not of the book.
 
 ## Drawer
 
