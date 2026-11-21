@@ -274,6 +274,7 @@ Every feature is checked per language, and translation per language pair (invari
 - Progress is a percentage or ring only, since Chrome gives no size. The reader can keep reading and close the popup.
 - A failed download shows "Download didn't finish" with Try again.
 - If Chrome evicts a model, the next reader load shows Needs download again.
+- While translation or language detection needs a download, the drawer adds a "What Chrome downloads" link to Help's Downloads section. Sizes appear only in Help, worded as approximate.
 
 ### Voices
 
@@ -311,18 +312,19 @@ One small card over the first reader opened, with no welcome page or feature tou
 ```
 What should Tolk translate into?
 [ English                        ▾]
-Translation and local voices run on this device.
+Translation and local voices run on this device. Chrome
+downloads a language only when you ask.
                           [ Continue ]
 ```
 
 - It asks for L1 only, pre-filled from the browser's language, and it can be changed later in the drawer.
 - It never asks for L2, which is detected per document.
-- Model downloads are explained at the first click that needs one, not here.
+- Its one line on downloads says only that nothing downloads unless the reader asks. What downloads, its size and its removal are in Help, under Downloads.
 - It doesn't block anything, and the text stays scrollable behind it. Only Continue saves and closes it, and the pre-filled language applies until then. If the browser's language isn't one Chrome translates, it pre-fills English.
 
 ## Help
 
-A separate page in the same colour scheme, in English, covering what Tolk is, its features, keyboard shortcuts and privacy. It's reached from the settings drawer and from messages that need more explanation than fits on one line, such as having no voice. It opens in a new tab so the reader keeps their place, and it never opens by itself.
+A separate page in the same colour scheme, in English, covering what Tolk is, its features, downloads, keyboard shortcuts and privacy. It's reached from the settings drawer and from messages that need more explanation than fits on one line, such as having no voice. It opens in a new tab so the reader keeps their place, and it never opens by itself.
 
 It describes only what exists, so each milestone adds its own features.
 

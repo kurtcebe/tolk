@@ -54,6 +54,11 @@ M7 adds no new AI calls: books use the existing detection and translation paths.
 - **`DecompressionStream`:** not built-in AI, but it's new to Tolk. MDN documents `deflate-raw` and doesn't say what corrupt input does. Tested in Chrome 157 on 2026-11-09: reading the stream rejects, so `zip.ts` treats that as a damaged file.
 - **`contextMenus`:** the `action` context covers the toolbar icon's menu, with a limit of 6 top-level items. The page doesn't say whether the permission adds an install warning, so check that when loading the extension.
 
+## Re-checked 2026-11-21, explaining downloads
+
+- **Removal:** the model management, Translator, Language Detector and get-started pages still describe no API, setting, `chrome://` page or policy for deleting a model or language pack. `chrome://on-device-internals` is only for checking. The purge rules above are given for Gemini Nano only, and the Translator and Language Detector pages say nothing about purging. So Help says Chrome *may* remove downloads itself, and offers no cleanup button.
+- **Sizes, measured 2026-11-21:** on one Mac with Chrome 157, the profile's `TranslateKit` folder held `models/en_nl` at 77 MB, `models/en_tr` at 78 MB and a shared `lib` at 24 MB. The folder names suggest each pack pairs a language with English, so a pair without English may need two, but no page says so. The language detection page only calls its model "very small". Gemini Nano's `OptGuideOnDeviceModel` folder was 4.0 GB, which Tolk doesn't use. Help words all sizes as approximate and dated.
+
 ## Languages
 
 The Prompt API and Summarizer docs list only `en`, `ja`, `es`, `de` and `fr`, with more in development. On a Chrome build tested 2026-08-13, `create()` without `expectedOutputs` also warned: *"Please specify a supported output language code: [de, en, es, fr, ja]."*
