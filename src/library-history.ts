@@ -3,7 +3,7 @@
 // history-store.ts, apart from giving out book colours and language shapes, and
 // clearing. Book titles are the reader's own data, so they go in as text.
 
-import { mountAquarium, setTank } from "./aquarium.js";
+import { highlightDay, mountAquarium, setTank } from "./aquarium.js";
 import { buildTank, countLine, tankStart, type Tank } from "./aquarium-data.js";
 import { requireElement } from "./controls.js";
 import {
@@ -35,6 +35,9 @@ let finished = 0;
 let identities: Identities = emptyIdentities();
 let titleOf: (bookId: string) => string | null = () => null;
 let onColours: () => void = () => {};
+/** The calendar day under the pointer, and the one with focus, for the aquarium's highlight. */
+let pointedDay: string | null = null;
+let focusedDay: string | null = null;
 
 /**
  * `bookTitle` names a book by ID, or returns null for one that's been deleted.
@@ -185,6 +188,12 @@ function renderCalendar(): void {
   // How many blank cells come before the 1st, for this locale's first weekday.
   const lead = (new Date(year, month, 1).getDay() - (first % 7) + 7) % 7;
 
+  // The buttons are about to be replaced, and a removed button never says the
+  // pointer or focus has left it.
+  pointedDay = null;
+  focusedDay = null;
+  updateDayHighlight();
+
   const rows: HTMLTableRowElement[] = [];
   let row = document.createElement("tr");
   for (let blank = 0; blank < lead; blank += 1) {
@@ -219,6 +228,7 @@ function renderCalendar(): void {
         .querySelector<HTMLElement>('[aria-pressed="true"]')
         ?.focus();
     });
+    trackDayHighlight(button, date);
     cell.append(button);
     row.append(cell);
     if (row.children.length === 7) {
@@ -236,6 +246,33 @@ function renderCalendar(): void {
   const tbody = document.createElement("tbody");
   tbody.append(...rows);
   table.replaceChildren(thead, tbody);
+}
+
+/**
+ * Pointing at or focusing a day highlights its fish. Pointer and focus are tracked
+ * apart, so moving the pointer away leaves a focused day highlighted.
+ */
+function trackDayHighlight(button: HTMLButtonElement, date: string): void {
+  button.addEventListener("pointerenter", () => {
+    pointedDay = date;
+    updateDayHighlight();
+  });
+  button.addEventListener("pointerleave", () => {
+    pointedDay = null;
+    updateDayHighlight();
+  });
+  button.addEventListener("focus", () => {
+    focusedDay = date;
+    updateDayHighlight();
+  });
+  button.addEventListener("blur", () => {
+    focusedDay = null;
+    updateDayHighlight();
+  });
+}
+
+function updateDayHighlight(): void {
+  highlightDay(pointedDay ?? focusedDay);
 }
 
 function renderChosenDay(): void {
