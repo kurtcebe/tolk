@@ -13,3 +13,6 @@ CLAUDE.local.md
 
 # Compiled TypeScript
 extension/js/
+
+# Store zips from npm run package
+dist/
