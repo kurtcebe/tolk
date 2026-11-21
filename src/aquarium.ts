@@ -19,7 +19,7 @@ const BUBBLE_RATE: readonly [number, number] = [0.25, 1.6];
 const BUBBLE_WORDS_CAP = 100;
 /** Silver fish brighten and dim over this many seconds. */
 const SHIMMER_SECONDS = 4;
-/** How far the other fish fade towards the water while a book is highlighted. */
+/** How far the other fish fade towards the water while some fish are highlighted. */
 const HIGHLIGHT_FADE = 0.7;
 const HIGHLIGHT_SECONDS = 0.2;
 /**
@@ -226,8 +226,9 @@ let frame = 0;
 let lastTime = 0;
 /** Seconds of animation, which only passes while the loop runs. */
 let clock = 0;
-/** The book whose fish stand out, kept while its highlight fades away. */
-let highlighted: string | null = null;
+/** Which fish stand out: a book's, or one day's. Kept while the highlight fades away. */
+type Highlight = { kind: "book"; bookId: string } | { kind: "day"; date: string };
+let highlighted: Highlight | null = null;
 /** 0 to 1: how far the highlight has come in. */
 let emphasis = 0;
 let emphasisTarget = 0;
@@ -290,10 +291,22 @@ export function setTank(next: Tank): void {
  * from its book cards, so the aquarium never has to look at the page.
  */
 export function highlightBook(bookId: string | null): void {
-  if (bookId !== null) {
-    highlighted = bookId;
+  highlight(bookId === null ? null : { kind: "book", bookId });
+}
+
+/**
+ * Makes one day's fish stand out, or ends that with null. The calendar calls this
+ * from its days. A day without a fish changes nothing, rather than fading them all.
+ */
+export function highlightDay(date: string | null): void {
+  highlight(date === null || !fish.has(date) ? null : { kind: "day", date });
+}
+
+function highlight(next: Highlight | null): void {
+  if (next !== null) {
+    highlighted = next;
   }
-  emphasisTarget = bookId === null ? 0 : 1;
+  emphasisTarget = next === null ? 0 : 1;
   // Without the loop there's nothing to ease it in, so it changes at once.
   if (frame === 0) {
     emphasis = emphasisTarget;
@@ -516,13 +529,20 @@ function keepInside(one: Fish): boolean {
 }
 
 function isHighlighted(one: Fish): boolean {
-  const matches = (source: Source | null): boolean => source?.kind === "book" && source.bookId === highlighted;
-  return highlighted !== null && (matches(one.data.head) || matches(one.data.tail) || matches(one.data.stripes));
+  if (highlighted === null) {
+    return false;
+  }
+  if (highlighted.kind === "day") {
+    return one.data.date === highlighted.date;
+  }
+  const { bookId } = highlighted;
+  const matches = (source: Source | null): boolean => source?.kind === "book" && source.bookId === bookId;
+  return matches(one.data.head) || matches(one.data.tail) || matches(one.data.stripes);
 }
 
 /**
  * A source's full colour, worked out as it's drawn: silver shimmers, back fish take
- * a little haze, and while a book is highlighted the other fish fade.
+ * a little haze, and while some fish are highlighted the others fade.
  */
 function colourOf(source: Source, one: Fish, still: boolean): string {
   const water = mix(palette.waterTop, palette.waterBottom, 0.5);
