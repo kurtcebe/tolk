@@ -6,6 +6,10 @@ How a version gets from `main` to the Chrome Web Store, and the listing text to 
 
 `version` in `extension/manifest.json` and `package.json` stay the same. The first store release is 1.0.0. After that, a fix raises the patch number and a new feature raises the minor number. The store rejects an upload whose version isn't higher than the published one.
 
+## Where the files go
+
+The scripts write to `dist/`, which is gitignored. Finished release files are kept in a separate local repository, `tolk-dist`, next to this one: each store zip with its SHA-256, the store images, and the introduction video with its recording, captions, thumbnail, `edit.json` and demo files. Its README lists them. The scripts that read `edit.json` take its path, such as `node tools/video/edit.mjs ../tolk-dist/video/edit.json`.
+
 ## Before every release
 
 1. On `main`, raise the version in both files.
