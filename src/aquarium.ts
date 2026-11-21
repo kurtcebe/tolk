@@ -22,6 +22,12 @@ const SHIMMER_SECONDS = 4;
 /** How far the other fish fade towards the water while a book is highlighted. */
 const HIGHLIGHT_FADE = 0.7;
 const HIGHLIGHT_SECONDS = 0.2;
+/**
+ * The two stripes, as their middles measured from the nose and a width, in shares of
+ * the fish's length. Together they cover 20% of it.
+ */
+const STRIPES = [0.36, 0.6] as const;
+const STRIPE_WIDTH = 0.1;
 
 /**
  * A tuple type: an array with a fixed length and a type for each place. Here it's
@@ -511,7 +517,7 @@ function keepInside(one: Fish): boolean {
 
 function isHighlighted(one: Fish): boolean {
   const matches = (source: Source | null): boolean => source?.kind === "book" && source.bookId === highlighted;
-  return highlighted !== null && (matches(one.data.head) || matches(one.data.tail));
+  return highlighted !== null && (matches(one.data.head) || matches(one.data.tail) || matches(one.data.stripes));
 }
 
 /**
@@ -723,9 +729,9 @@ function drawFishInLayer(ctx: CanvasRenderingContext2D, layer: Layer, still: boo
 }
 
 /**
- * A fish in its language's shape, nose to the right. A two-colour fish is drawn in
- * the tail's colour, then in the head's colour clipped to the head's share of its
- * length.
+ * A fish in its language's shape, nose to the right. It's drawn in the tail's
+ * colour, then in the head's colour clipped to the head's share of its length, then
+ * in the stripes' colour clipped to two bands across the body.
  */
 function drawFish(ctx: CanvasRenderingContext2D, one: Fish, still: boolean): void {
   const length = lengthOf(one);
@@ -734,7 +740,7 @@ function drawFish(ctx: CanvasRenderingContext2D, one: Fish, still: boolean): voi
   const span = length * (form.nose - form.tailEnd);
   const wag = still ? 0 : Math.sin(clock * 7 + one.phase) * length * 0.05;
   const shape = form.body(length, wag);
-  const { head, tail, split } = one.data;
+  const { head, tail, stripes, split } = one.data;
 
   ctx.save();
   ctx.translate(one.x, one.y);
@@ -760,6 +766,17 @@ function drawFish(ctx: CanvasRenderingContext2D, one: Fish, still: boolean): voi
     ctx.rect(nose - split * span, -length, split * span + 1, length * 2);
     ctx.clip();
     ctx.fillStyle = colourOf(head, one, still);
+    ctx.fill(shape);
+    ctx.restore();
+  }
+  if (stripes !== null) {
+    ctx.save();
+    ctx.beginPath();
+    for (const middle of STRIPES) {
+      ctx.rect(nose - (middle + STRIPE_WIDTH / 2) * span, -length, STRIPE_WIDTH * span, length * 2);
+    }
+    ctx.clip();
+    ctx.fillStyle = colourOf(stripes, one, still);
     ctx.fill(shape);
     ctx.restore();
   }
