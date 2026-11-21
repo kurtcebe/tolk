@@ -3,7 +3,7 @@
 // front and the reader hasn't asked for reduced motion. Otherwise the tank is drawn
 // once, still, whenever something changes.
 
-import type { Tank, TankFish } from "./aquarium-data.js";
+import type { Source, Tank, TankFish } from "./aquarium-data.js";
 
 const HEIGHT = 200;
 const FLOOR = 18;
@@ -17,6 +17,11 @@ const MAX_SHELLS = 30;
 /** Bubbles per second at 1 and at 100 saved words. The rate stops rising at 100. */
 const BUBBLE_RATE: readonly [number, number] = [0.25, 1.6];
 const BUBBLE_WORDS_CAP = 100;
+/** Silver fish brighten and dim over this many seconds. */
+const SHIMMER_SECONDS = 4;
+/** How far the other fish fade towards the water while a book is highlighted. */
+const HIGHLIGHT_FADE = 0.7;
+const HIGHLIGHT_SECONDS = 0.2;
 
 /**
  * A tuple type: an array with a fixed length and a type for each place. Here it's
@@ -28,17 +33,18 @@ interface Palette {
   waterTop: Rgb;
   waterBottom: Rgb;
   floor: Rgb;
-  book: Rgb;
-  article: Rgb;
+  /** The 8 book colours, in the order books take them. */
+  books: Rgb[];
+  silver: Rgb;
   plant: Rgb;
   shell: Rgb;
   /** How strong the rays of light are, 0 to 1. */
   ray: number;
 }
 
-/** Back, middle and front. Back fish are smaller, slower and hazier. */
+/** Back, middle and front. Back fish are smaller, slower and a little hazier. */
 const LAYERS = [
-  { scale: 0.7, speed: 0.65, haze: 0.4 },
+  { scale: 0.7, speed: 0.65, haze: 0.15 },
   { scale: 1, speed: 1, haze: 0 },
   { scale: 1.3, speed: 1.15, haze: 0 },
 ] as const;
@@ -63,11 +69,83 @@ interface Fish {
   tilt: number;
   phase: number;
   fleeUntil: number;
-  head: string;
-  tail: string;
-  /** The head colour's share of the fish's length, or 1 for a single colour. */
-  split: number;
 }
+
+/**
+ * A fish shape, nose to the right, in units of the fish's length. `body` draws the
+ * outline, with `wag` moving the tail. `nose` and `tailEnd` bound the length, which
+ * the head's colour is clipped to, and `halfHeight` keeps fins inside the water.
+ */
+interface Shape {
+  body: (length: number, wag: number) => Path2D;
+  nose: number;
+  tailEnd: number;
+  halfHeight: number;
+  eye: readonly [number, number];
+}
+
+/** The first fish shape, from the prototype: an oval body and a triangle tail. */
+const OVAL: Shape = {
+  body: (length, wag) => {
+    const path = new Path2D();
+    path.ellipse(0, 0, length * 0.36, length * 0.24, 0, 0, Math.PI * 2);
+    path.moveTo(-length * 0.3, 0);
+    path.lineTo(-length * 0.64, -length * 0.2 + wag);
+    path.lineTo(-length * 0.64, length * 0.2 + wag);
+    path.closePath();
+    return path;
+  },
+  nose: 0.36,
+  tailEnd: -0.64,
+  halfHeight: 0.3,
+  eye: [0.2, -0.05],
+};
+
+/** Oval, tall and round like an angelfish, and long and slim like a minnow. */
+const SHAPES: readonly Shape[] = [
+  OVAL,
+  {
+    body: (length, wag) => {
+      const path = new Path2D();
+      path.ellipse(0, 0, length * 0.3, length * 0.29, 0, 0, Math.PI * 2);
+      // Swept-back fins above and below.
+      path.moveTo(length * 0.06, -length * 0.26);
+      path.lineTo(-length * 0.3, -length * 0.56);
+      path.lineTo(-length * 0.2, -length * 0.12);
+      path.closePath();
+      path.moveTo(length * 0.06, length * 0.26);
+      path.lineTo(-length * 0.3, length * 0.56);
+      path.lineTo(-length * 0.2, length * 0.12);
+      path.closePath();
+      path.moveTo(-length * 0.24, 0);
+      path.lineTo(-length * 0.5, -length * 0.17 + wag);
+      path.lineTo(-length * 0.5, length * 0.17 + wag);
+      path.closePath();
+      return path;
+    },
+    nose: 0.3,
+    tailEnd: -0.5,
+    halfHeight: 0.58,
+    eye: [0.14, -0.07],
+  },
+  {
+    body: (length, wag) => {
+      const path = new Path2D();
+      path.ellipse(length * 0.04, 0, length * 0.42, length * 0.13, 0, 0, Math.PI * 2);
+      // A forked tail.
+      path.moveTo(-length * 0.32, 0);
+      path.lineTo(-length * 0.62, -length * 0.16 + wag);
+      path.lineTo(-length * 0.52, wag);
+      path.lineTo(-length * 0.62, length * 0.16 + wag);
+      path.closePath();
+      return path;
+    },
+    nose: 0.46,
+    tailEnd: -0.62,
+    halfHeight: 0.2,
+    eye: [0.32, -0.03],
+  },
+];
 
 interface Bubble {
   x: number;
@@ -110,8 +188,17 @@ const FALLBACK: Palette = {
   waterTop: [0xcf, 0xe3, 0xee],
   waterBottom: [0x7f, 0xa9, 0xc4],
   floor: [0xd9, 0xcb, 0xae],
-  book: [0xe0, 0x7a, 0x2e],
-  article: [0x1f, 0x8a, 0x86],
+  books: [
+    [0xe0, 0x7a, 0x2e],
+    [0xc8, 0x34, 0x4a],
+    [0xd9, 0xa8, 0x1e],
+    [0x7b, 0x4f, 0xb8],
+    [0x3e, 0x9a, 0x4c],
+    [0xd4, 0x5a, 0x9e],
+    [0x8a, 0x5a, 0x2b],
+    [0x2f, 0x5f, 0xb0],
+  ],
+  silver: [0x8e, 0x9b, 0xa6],
   plant: [0x4e, 0x8a, 0x4a],
   shell: [0xf3, 0xe6, 0xd8],
   ray: 0.4,
@@ -133,6 +220,11 @@ let frame = 0;
 let lastTime = 0;
 /** Seconds of animation, which only passes while the loop runs. */
 let clock = 0;
+/** The book whose fish stand out, kept while its highlight fades away. */
+let highlighted: string | null = null;
+/** 0 to 1: how far the highlight has come in. */
+let emphasis = 0;
+let emphasisTarget = 0;
 
 export function mountAquarium(element: HTMLCanvasElement): void {
   canvas = element;
@@ -148,7 +240,6 @@ export function mountAquarium(element: HTMLCanvasElement): void {
   // A colour scheme change swaps the tokens on the root element.
   new MutationObserver(() => {
     palette = readPalette(element);
-    recolour();
     redraw();
   }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-scheme"] });
   element.addEventListener("pointermove", (event) => {
@@ -176,13 +267,45 @@ export function setTank(next: Tank): void {
       fish.set(day.date, newFish(day));
     } else {
       existing.data = day;
+      // A new shape can be taller, so it might now poke out of the water.
+      if (width > 0) {
+        keepInside(existing);
+      }
     }
   }
   if (next.wordsSaved === 0) {
     bubbles = [];
   }
-  recolour();
   redraw();
+}
+
+/**
+ * Makes a book's fish stand out, or ends that with null. The library calls this
+ * from its book cards, so the aquarium never has to look at the page.
+ */
+export function highlightBook(bookId: string | null): void {
+  if (bookId !== null) {
+    highlighted = bookId;
+  }
+  emphasisTarget = bookId === null ? 0 : 1;
+  // Without the loop there's nothing to ease it in, so it changes at once.
+  if (frame === 0) {
+    emphasis = emphasisTarget;
+    settleHighlight();
+    redraw();
+  }
+}
+
+function easeHighlight(seconds: number): void {
+  const step = seconds / HIGHLIGHT_SECONDS;
+  emphasis += clamp(emphasisTarget - emphasis, -step, step);
+  settleHighlight();
+}
+
+function settleHighlight(): void {
+  if (emphasis === 0 && emphasisTarget === 0) {
+    highlighted = null;
+  }
 }
 
 function updateLoop(): void {
@@ -198,6 +321,8 @@ function updateLoop(): void {
     if (reducedMotion.matches) {
       bubbles = [];
     }
+    emphasis = emphasisTarget;
+    settleHighlight();
     redraw();
   }
 }
@@ -211,6 +336,7 @@ function tick(now: number): void {
     swim(one, seconds);
   }
   moveBubbles(seconds);
+  easeHighlight(seconds);
   draw();
   frame = requestAnimationFrame(tick);
 }
@@ -262,9 +388,6 @@ function newFish(day: TankFish): Fish {
     tilt: 0,
     phase: random() * Math.PI * 2,
     fleeUntil: 0,
-    head: "",
-    tail: "",
-    split: 1,
   };
   const { top, bottom } = verticalBounds(one);
   one.y = top + random() * (bottom - top);
@@ -285,9 +408,13 @@ function lengthOf(one: Fish): number {
   return FISH_LENGTH * LAYERS[one.layer].scale;
 }
 
+function shapeOf(one: Fish): Shape {
+  return SHAPES[one.data.shape] ?? OVAL;
+}
+
 function verticalBounds(one: Fish): { top: number; bottom: number } {
-  const length = lengthOf(one);
-  return { top: 10 + length * 0.3, bottom: HEIGHT - FLOOR - 6 - length * 0.3 };
+  const reach = lengthOf(one) * shapeOf(one).halfHeight;
+  return { top: 10 + reach, bottom: HEIGHT - FLOOR - 6 - reach };
 }
 
 function horizontalBounds(one: Fish): { left: number; right: number } {
@@ -382,25 +509,27 @@ function keepInside(one: Fish): boolean {
   return moved;
 }
 
+function isHighlighted(one: Fish): boolean {
+  const matches = (source: Source | null): boolean => source?.kind === "book" && source.bookId === highlighted;
+  return highlighted !== null && (matches(one.data.head) || matches(one.data.tail));
+}
+
 /**
- * Full colour at 60 minutes or more, fading towards the water at less. A source
- * under 10% of the day is left out, and the larger share is the head.
+ * A source's full colour, worked out as it's drawn: silver shimmers, back fish take
+ * a little haze, and while a book is highlighted the other fish fade.
  */
-function recolour(): void {
+function colourOf(source: Source, one: Fish, still: boolean): string {
   const water = mix(palette.waterTop, palette.waterBottom, 0.5);
-  for (const one of fish.values()) {
-    const { seconds, bookSeconds, articleSeconds } = one.data;
-    const strength = 0.3 + 0.7 * clamp((seconds / 60 - 1) / 59, 0, 1);
-    const haze = LAYERS[one.layer].haze;
-    const colourOf = (source: Rgb): string => css(mix(mix(water, source, strength), water, haze));
-    const sourced = bookSeconds + articleSeconds;
-    const bookShare = sourced === 0 ? 1 : bookSeconds / sourced;
-    const bookFirst = bookShare >= 0.5;
-    const headShare = bookFirst ? bookShare : 1 - bookShare;
-    one.head = colourOf(bookFirst ? palette.book : palette.article);
-    one.tail = colourOf(bookFirst ? palette.article : palette.book);
-    one.split = headShare > 0.9 ? 1 : headShare;
+  let colour = source.kind === "book" ? (palette.books[source.colour] ?? palette.silver) : palette.silver;
+  if (source.kind === "articles" && !still) {
+    const wave = Math.sin((clock * Math.PI * 2) / SHIMMER_SECONDS + one.phase);
+    colour = wave > 0 ? mix(colour, [255, 255, 255], 0.25 * wave) : mix(colour, [0, 0, 0], -0.12 * wave);
   }
+  colour = mix(colour, water, LAYERS[one.layer].haze);
+  if (highlighted !== null && !isHighlighted(one)) {
+    colour = mix(colour, water, HIGHLIGHT_FADE * emphasis);
+  }
+  return css(colour);
 }
 
 // Bubbles
@@ -594,20 +723,18 @@ function drawFishInLayer(ctx: CanvasRenderingContext2D, layer: Layer, still: boo
 }
 
 /**
- * The prototype's fish as a vector shape: an oval body and a triangle tail, with
- * the nose to the right. A two-colour fish is drawn in the tail's colour, then in
- * the head's colour clipped to the head's share of its length.
+ * A fish in its language's shape, nose to the right. A two-colour fish is drawn in
+ * the tail's colour, then in the head's colour clipped to the head's share of its
+ * length.
  */
 function drawFish(ctx: CanvasRenderingContext2D, one: Fish, still: boolean): void {
   const length = lengthOf(one);
-  const nose = length * 0.36;
+  const form = shapeOf(one);
+  const nose = length * form.nose;
+  const span = length * (form.nose - form.tailEnd);
   const wag = still ? 0 : Math.sin(clock * 7 + one.phase) * length * 0.05;
-  const shape = new Path2D();
-  shape.ellipse(0, 0, nose, length * 0.24, 0, 0, Math.PI * 2);
-  shape.moveTo(-length * 0.3, 0);
-  shape.lineTo(-length * 0.64, -length * 0.2 + wag);
-  shape.lineTo(-length * 0.64, length * 0.2 + wag);
-  shape.closePath();
+  const shape = form.body(length, wag);
+  const { head, tail, split } = one.data;
 
   ctx.save();
   ctx.translate(one.x, one.y);
@@ -615,35 +742,36 @@ function drawFish(ctx: CanvasRenderingContext2D, one: Fish, still: boolean): voi
   const facing = Math.sign(one.facing) * Math.max(0.12, Math.abs(one.facing));
   ctx.scale(facing === 0 ? 1 : facing, 1);
   ctx.rotate(one.tilt);
-  if (LAYERS[one.layer].haze > 0) {
-    ctx.globalAlpha = 0.85;
+  // Outlines first, so the fill covers their inner half and the tail's seam. A
+  // highlighted fish gets a light ring outside its usual dark one.
+  if (isHighlighted(one) && emphasis > 0) {
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * emphasis})`;
+    ctx.lineWidth = 5;
+    ctx.stroke(shape);
   }
-  // The outline first, so the fill covers its inner half and the tail's seam.
   ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
   ctx.lineWidth = 2;
   ctx.stroke(shape);
-  ctx.fillStyle = one.tail;
+  ctx.fillStyle = colourOf(tail ?? head, one, still);
   ctx.fill(shape);
-  if (one.split < 1) {
+  if (tail !== null && split < 1) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(nose - one.split * length, -length, one.split * length + 1, length * 2);
+    ctx.rect(nose - split * span, -length, split * span + 1, length * 2);
     ctx.clip();
-    ctx.fillStyle = one.head;
+    ctx.fillStyle = colourOf(head, one, still);
     ctx.fill(shape);
     ctx.restore();
-  } else {
-    ctx.fillStyle = one.head;
-    ctx.fill(shape);
   }
   const eye = Math.max(1.2, length * 0.05);
+  const [eyeX, eyeY] = [length * form.eye[0], length * form.eye[1]];
   ctx.fillStyle = "#1a1a1a";
   ctx.beginPath();
-  ctx.arc(length * 0.2, -length * 0.05, eye, 0, Math.PI * 2);
+  ctx.arc(eyeX, eyeY, eye, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
   ctx.beginPath();
-  ctx.arc(length * 0.2 + eye * 0.35, -length * 0.05 - eye * 0.35, eye * 0.4, 0, Math.PI * 2);
+  ctx.arc(eyeX + eye * 0.35, eyeY - eye * 0.35, eye * 0.4, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -658,8 +786,8 @@ function readPalette(element: HTMLElement): Palette {
     waterTop: colour("--aquarium-water-top", FALLBACK.waterTop),
     waterBottom: colour("--aquarium-water-bottom", FALLBACK.waterBottom),
     floor: colour("--aquarium-floor", FALLBACK.floor),
-    book: colour("--aquarium-book", FALLBACK.book),
-    article: colour("--aquarium-article", FALLBACK.article),
+    books: FALLBACK.books.map((fallback, index) => colour(`--aquarium-book-${index + 1}`, fallback)),
+    silver: colour("--aquarium-silver", FALLBACK.silver),
     plant: colour("--aquarium-plant", FALLBACK.plant),
     shell: colour("--aquarium-shell", FALLBACK.shell),
     ray: Number.isFinite(ray) ? clamp(ray, 0, 1) : FALLBACK.ray,

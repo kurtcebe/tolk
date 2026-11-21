@@ -1,23 +1,37 @@
 // What the aquarium shows, worked out from reading history: a fish per reading day
-// in the last 30, the streak, how grown the plants are, and the counts under the
-// tank. It only does arithmetic, so the drawing in aquarium.ts never reads storage.
+// in the last 30, its colours and shape, the streak, how grown the plants are, and
+// the counts under the tank. It only does arithmetic, so the drawing in aquarium.ts
+// never reads storage.
 
-import { localDate, type DayTotals } from "./history-store.js";
+import { localDate, longestLanguage, type DayTotals, type Identities } from "./history-store.js";
 import { UI_LOCALE } from "./reading-format.js";
 
 /** How many days the tank looks back over, today included. */
 export const TANK_DAYS = 30;
 const MINUTE = 60;
+/** A source under this share of the day is left out of its fish. */
+const LEAST_SHARE = 0.1;
 /** Plant growth is counted in days, and these are where a stage starts. */
 const STAGES = [0, 3, 7, 14, 30];
 const FULL_GROWTH = 30;
 
+/**
+ * What a fish is coloured by. This is a union of two object types, told apart by
+ * `kind`: checking `kind === "book"` lets TypeScript know `bookId` is there.
+ */
+export type Source = { kind: "book"; bookId: string; colour: number } | { kind: "articles" };
+
 export interface TankFish {
   /** The day it stands for, which also names it, so it keeps its place and layer. */
   date: string;
-  seconds: number;
-  bookSeconds: number;
-  articleSeconds: number;
+  /** The day's largest source. */
+  head: Source;
+  /** The second largest, or null when there's only one. */
+  tail: Source | null;
+  /** The head's share of the fish's length: its share of the two sources' time. */
+  split: number;
+  /** An index into the fish shapes, from the day's longest-read language. */
+  shape: number;
 }
 
 export interface Tank {
@@ -27,13 +41,6 @@ export interface Tank {
   growth: number;
   wordsSaved: number;
   finished: number;
-}
-
-/** A day's time, added up across languages. */
-interface DaySum {
-  seconds: number;
-  bookSeconds: number;
-  articleSeconds: number;
 }
 
 /** The first date the tank covers: 29 days before today. */
@@ -47,23 +54,25 @@ export function tankStart(today: Date): Date {
  */
 export function buildTank(
   days: readonly DayTotals[],
+  identities: Identities,
   today: Date,
   wordsSaved: number,
   finished: number,
 ): Tank {
-  const sums = sumByDate(days);
-  const isReadingDay = (date: string): boolean => (sums.get(date)?.seconds ?? 0) >= MINUTE;
+  const byDate = groupByDate(days);
+  const seconds = new Map([...byDate].map(([date, onDay]) => [date, totalSeconds(onDay)]));
+  const isReadingDay = (date: string): boolean => (seconds.get(date) ?? 0) >= MINUTE;
   const todayDate = localDate(today);
   const start = localDate(tankStart(today));
 
   const fish: TankFish[] = [];
-  for (const [date, sum] of [...sums.entries()].sort(([first], [second]) => first.localeCompare(second))) {
+  for (const [date, onDay] of [...byDate].sort(([first], [second]) => first.localeCompare(second))) {
     if (date >= start && date <= todayDate && isReadingDay(date)) {
-      fish.push({ date, ...sum });
+      fish.push(fishFor(date, onDay, identities));
     }
   }
 
-  const first = [...sums.keys()].sort()[0] ?? todayDate;
+  const first = [...byDate.keys()].sort()[0] ?? todayDate;
   return {
     fish,
     streak: streakOf(isReadingDay, today),
@@ -108,18 +117,55 @@ function stageBelow(growth: number): number {
   return STAGES.filter((stage) => stage < growth).at(-1) ?? 0;
 }
 
-function sumByDate(days: readonly DayTotals[]): Map<string, DaySum> {
-  const sums = new Map<string, DaySum>();
-  for (const entry of days) {
-    const sum = sums.get(entry.date) ?? { seconds: 0, bookSeconds: 0, articleSeconds: 0 };
-    sum.seconds += entry.seconds;
-    sum.articleSeconds += entry.articleSeconds;
-    for (const seconds of Object.values(entry.books)) {
-      sum.bookSeconds += seconds;
+/**
+ * The day's two largest sources, each book on its own and articles together, the
+ * larger as the head. A source under 10% of the day is left out, unless that would
+ * leave nothing. A book or language without an identity yet falls back to the first.
+ */
+function fishFor(date: string, onDay: readonly DayTotals[], identities: Identities): TankFish {
+  const day = totalSeconds(onDay);
+  const sources: [Source, number][] = [];
+  let articleSeconds = 0;
+  const bookSeconds = new Map<string, number>();
+  for (const entry of onDay) {
+    articleSeconds += entry.articleSeconds;
+    for (const [bookId, seconds] of Object.entries(entry.books)) {
+      bookSeconds.set(bookId, (bookSeconds.get(bookId) ?? 0) + seconds);
     }
-    sums.set(entry.date, sum);
   }
-  return sums;
+  for (const [bookId, seconds] of bookSeconds) {
+    sources.push([{ kind: "book", bookId, colour: identities.colours.get(bookId) ?? 0 }, seconds]);
+  }
+  sources.push([{ kind: "articles" }, articleSeconds]);
+  const ranked = sources
+    .filter(([, seconds]) => seconds > 0)
+    .sort(([first, firstSeconds], [second, secondSeconds]) => secondSeconds - firstSeconds || sourceKey(first).localeCompare(sourceKey(second)));
+  const kept = ranked.filter(([, seconds]) => seconds >= day * LEAST_SHARE);
+  const [head, tail] = kept.length > 0 ? kept : ranked;
+  const language = longestLanguage(onDay);
+  return {
+    date,
+    head: head?.[0] ?? { kind: "articles" },
+    tail: tail?.[0] ?? null,
+    split: head === undefined || tail === undefined ? 1 : head[1] / (head[1] + tail[1]),
+    shape: language === null ? 0 : (identities.shapes.get(language) ?? 0),
+  };
+}
+
+function sourceKey(source: Source): string {
+  return source.kind === "book" ? `book:${source.bookId}` : "articles";
+}
+
+function groupByDate(days: readonly DayTotals[]): Map<string, DayTotals[]> {
+  const grouped = new Map<string, DayTotals[]>();
+  for (const entry of days) {
+    grouped.set(entry.date, [...(grouped.get(entry.date) ?? []), entry]);
+  }
+  return grouped;
+}
+
+function totalSeconds(onDay: readonly DayTotals[]): number {
+  return onDay.reduce((sum, entry) => sum + entry.seconds, 0);
 }
 
 /** Counting in calendar days, so a clock change doesn't skip or repeat one. */
