@@ -6,16 +6,24 @@ Read real articles and books in the language you're learning, with everything ru
 
 Tolk is a free Chrome extension for people who can read authentic text in another language, but slowly and with gaps. Open a web article or an EPUB book in it, and it reads the text aloud and highlights each word as it's spoken, at a speed that suits you. It translates what you select, and keeps the words you want to remember.
 
+![Tolk reading a Dutch Wikipedia article aloud, with the current sentence and word highlighted and the player in the margin](docs/images/read-along.png)
+
 ## Features
 
 - **A clean reader** for the article on the current page, or for EPUB books you import into a library
 - **Read-along:** read-aloud that highlights the current word and sentence, with a fine speed slider that goes down to slow speeds
 - **Translation** of a word, a phrase or a whole paragraph, shown as a line under each sentence so the original stays in view
 - **Saved words,** kept with their translation and the sentence they came from, and exportable to Anki
-- **Reading history:** how much you read each day, per language, as a calendar in the library
+- **Reading history:** how much you read each day, per language, as a calendar in the library, and an aquarium that gains a fish for each day you read
 - Two modes, Book and Learner, and four colour schemes: Light, Sepia, Dark and Dim
 
 Tolk detects the language of the text itself, and you tell it your own language once.
+
+| Translation under each sentence | The library's aquarium and calendar |
+| --- | --- |
+| ![English translation lines under each Dutch sentence of a paragraph](docs/images/translation.png) | ![The aquarium with a fish for each reading day, above a calendar of the month](docs/images/aquarium.png) |
+
+The screenshots show the Dutch Wikipedia article [“Stroopwafel”](https://nl.wikipedia.org/wiki/Stroopwafel), under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), so the screenshots are under that licence too.
 
 ## What it needs
 
