@@ -1,9 +1,14 @@
 {
   "name": "tolk",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc",
+    "package": "sh scripts/package.sh",
+    "video": "tsc && node tools/video/record.mjs && node tools/video/assemble.mjs"
+  },
   "devDependencies": {
     "@types/chrome": "^0.3.7",
     "@types/dom-chromium-ai": "^0.0.18",
