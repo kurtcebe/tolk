@@ -119,7 +119,7 @@ Both scripts write to `dist/store/`.
 
 **Remote code:** No, I am not using remote code.
 
-**Data use.** Check the dashboard's own wording each time. Tolk itself collects nothing: no data reaches the developer. What it handles on the device is website content, the page the user opens, and the books they import. Two things leave the device through Chrome, and the policy says so: settings through Chrome sync, and the text spoken by a remote voice the user picks. Tick the three certifications: no selling, no use unrelated to the single purpose, no use for credit.
+**Data use.** Check the dashboard's own wording each time. Tolk itself collects nothing: no data reaches the developer. What it handles on the device is website content, the page the user opens, and the books they import. Two things leave the device through Chrome, and the policy says so: settings through Chrome sync, and the text spoken by a remote voice the user picks. Chrome's user data FAQ says data handled only on the device still has to be disclosed, so tick **Website content**, the page and books being read, and **Web history**, because saved words keep the title and address of the page they came from. Leave the rest unticked: reading history keeps daily totals of time and words, not clicks, scrolling or keystrokes, so it isn't *User activity*. Then tick the three certifications: no selling, no use unrelated to the single purpose, no use for credit.
 
 **Privacy policy URL:** https://github.com/kurtcebe/tolk/blob/main/PRIVACY.md
 
