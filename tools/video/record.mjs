@@ -220,7 +220,7 @@ async function setUpProfile(page, extensionUrl) {
     const state = await import("./js/state.js");
     await state.loadSettings();
     state.updateSettings({ ownLanguage: "en", scheme: "light", mode: "learner" });
-    state.updateSpeechPreference("nl", { rate: 0.85 });
+    state.updateSpeechPreference("nl", { rate: 0.9 });
     const findXander = () => speechSynthesis.getVoices().find((voice) => voice.name.startsWith("Xander") && voice.localService);
     for (let i = 0; i < 50 && !findXander(); i++) await new Promise((done) => setTimeout(done, 100));
     const xander = findXander();
@@ -389,11 +389,13 @@ async function filmShots(firstTab, extensionUrl) {
   shot("slower");
   const slider = await centreOf(reader, "#speed-slider");
   await moveTo(reader, slider.x, slider.y, 700);
-  for (let i = 0; i < 3; i++) {
+  // Several quick steps, so the voice restarts once at a clearly slower speed
+  // instead of repeating the same words at each step.
+  for (let i = 0; i < 6; i++) {
     await press(reader, "[", "BracketLeft", 219);
-    await sleep(700);
+    await sleep(110);
   }
-  await sleep(5000);
+  await sleep(7500);
   await clickOn(reader, "#player-play");
   await sleep(900);
 

@@ -23,7 +23,9 @@ const CLOSING_SECONDS = 5;
 const FPS = 30;
 const SAMPLE_RATE = 44100;
 /** Roughly how many words a minute macOS voices speak at Chrome's rate 1. */
-const SAY_WORDS_PER_MINUTE = 180;
+const SAY_WORDS_PER_MINUTE = 168;
+/** A sentence cut off sooner than this was barely heard, and would only stutter. */
+const SHORTEST_CLIP = 0.35;
 
 const ffmpeg = findFfmpeg();
 const timeline = JSON.parse(readFileSync(join(WORK, "timeline.json"), "utf8"));
@@ -80,7 +82,9 @@ function spokenText(record) {
 }
 
 function renderVoice() {
-  const spoken = speech.filter((record) => record.start !== null && record.end !== null);
+  const spoken = speech.filter(
+    (record) => record.start !== null && record.end !== null && (record.outcome === "end" || record.end - record.start >= SHORTEST_CLIP),
+  );
   const sayClip = (record, text, name) => {
     const raw = join(AUDIO, `${name}.aiff`);
     const clip = join(AUDIO, `${name}.wav`);
@@ -97,23 +101,27 @@ function renderVoice() {
     // Chrome reported when each word began. Rendering the text up to the last
     // reported word, and matching its length to when Chrome reached that word,
     // gives the pace without counting the pause Chrome leaves after a sentence.
+    // Chrome's start event can come well before the voice is heard, so the
+    // first reported word marks when the sentence really begins.
     let tempo = 1;
+    const first = record.boundaries[0];
     const last = record.boundaries.at(-1);
-    if (last !== undefined && last[1] > 0) {
-      const prefix = sayClip(record, record.text.slice(0, last[1]).trim(), `prefix-${i}`);
-      tempo = wavSeconds(prefix) / (last[0] - record.start);
+    if (first !== undefined && last !== undefined && last[1] > first[1]) {
+      const prefix = sayClip(record, record.text.slice(first[1], last[1]).trim(), `prefix-${i}`);
+      tempo = wavSeconds(prefix) / (last[0] - first[0]);
     }
-    return { clip, record, tempo: Math.min(1.3, Math.max(0.75, tempo)) };
+    const begins = first !== undefined && first[1] === 0 ? first[0] : record.start;
+    return { clip, record, begins, tempo: Math.min(1.3, Math.max(0.75, tempo)) };
   });
 
-  const parts = clips.map(({ record, tempo }, i) => {
+  const parts = clips.map(({ record, begins, tempo }, i) => {
     // A sentence stops where Chrome stopped it, or where the next one begins.
-    const next = clips[i + 1]?.record.start ?? Infinity;
+    const next = clips[i + 1]?.begins ?? Infinity;
     const stop = record.outcome === "end" ? Math.min(next, record.end + 1.5) : record.end;
-    const room = stop - record.start;
+    const room = stop - begins;
     const cut = Number.isFinite(room) ? `,atrim=0:${room.toFixed(3)},afade=t=out:st=${Math.max(0, room - 0.06).toFixed(3)}:d=0.06` : "";
-    const delay = Math.round(at(record.start) * 1000);
-    console.log(`  ${at(record.start).toFixed(2)} s  tempo ${tempo.toFixed(2)}  ${record.outcome === "end" ? "     " : "cut  "}${record.text.slice(0, 50)}`);
+    const delay = Math.round(at(begins) * 1000);
+    console.log(`  ${at(begins).toFixed(2)} s  rate ${record.rate.toFixed(2)}  tempo ${tempo.toFixed(2)}  ${record.outcome === "end" ? "     " : "cut  "}${record.text.slice(0, 50)}`);
     return `atempo=${tempo.toFixed(4)}${cut},adelay=${delay}:all=1`;
   });
 
