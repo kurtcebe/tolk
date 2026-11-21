@@ -10,12 +10,14 @@
 // Only Chrome's translation packs are copied from your own profile, so the
 // demo doesn't wait for a download. Nothing else of yours is read or touched.
 
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { homedir, tmpdir } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { captionHtml, closingCardHtml, coverHtml, titleCardHtml } from "./cards.mjs";
+import { captionHtml, closingCardHtml, coverHtml, pointerHtml, titleCardHtml } from "./cards.mjs";
 import { attach, launchChrome, sleep } from "./cdp.mjs";
 import { ARTICLE, BOOKS, SAVED_WORDS } from "./content.mjs";
 import { writeEpub } from "./epub.mjs";
@@ -42,7 +44,7 @@ if (!existsSync(join(EXTENSION, "js/reader.js"))) {
 
 // A local server for the demo article and the card images. Nothing leaves the machine.
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".woff2": "font/woff2", ".svg": "image/svg+xml", ".png": "image/png" };
+const TYPES = { "": "text/html; charset=utf-8", ".html": "text/html; charset=utf-8", ".woff2": "font/woff2", ".svg": "image/svg+xml", ".png": "image/png" };
 const server = createServer((request, response) => {
   const path = decodeURIComponent(new URL(request.url, "http://x").pathname);
   const file = path.startsWith("/fonts/") || path.startsWith("/icons/")
@@ -59,10 +61,17 @@ const server = createServer((request, response) => {
     response.writeHead(404).end();
   }
 });
-await new Promise((done) => server.listen(0, "127.0.0.1", done));
-const SERVER = `http://127.0.0.1:${server.address().port}`;
+// A fixed port keeps the address the same between runs, if it's free.
+await new Promise((done) => {
+  server.once("error", () => server.listen(0, "127.0.0.1", done));
+  server.listen(8080, "127.0.0.1", done);
+});
+// Chrome sends any *.localhost name to this computer by itself, and doesn't
+// call a local address "Not Secure", so the toolbar shows a plain address.
+const SERVER = `http://stadsnieuws.localhost:${server.address().port}`;
 
-writeFileSync(join(SITE, "article.html"), articleHtml());
+writeFileSync(join(SITE, "fietsen"), articleHtml());
+writeFileSync(join(SITE, "blank.html"), "<!doctype html><title>Tolk</title>");
 
 // Chrome, with a throwaway profile that only borrows the translation packs.
 
@@ -72,7 +81,23 @@ const translateKit = join(homedir(), "Library/Application Support/Google/Chrome/
 if (existsSync(translateKit)) {
   cpSync(translateKit, join(profile, "TranslateKit"), { recursive: true });
 }
-const { child, cdp } = launchChrome(profile, [`--window-size=${WIDTH},${HEIGHT + 120}`, "--window-position=40,40"]);
+// Chrome derives an unpacked extension's ID from its folder, so Tolk can be
+// pinned to the toolbar before it's loaded. The frame is set to light, to match the page.
+const expectedId = [...createHash("sha256").update(EXTENSION).digest("hex").slice(0, 32)]
+  .map((digit) => String.fromCharCode(97 + parseInt(digit, 16)))
+  .join("");
+mkdirSync(join(profile, "Default"), { recursive: true });
+writeFileSync(
+  join(profile, "Default/Preferences"),
+  JSON.stringify({ extensions: { pinned_extensions: [expectedId] }, browser: { theme: { color_scheme2: 1 } } }),
+);
+// --test-type hides Chrome's bar warning about the debugging flags. Starting on
+// a page rather than about:blank keeps the address bar from being focused.
+const { child, cdp } = launchChrome(
+  profile,
+  [`--window-size=${WIDTH},${HEIGHT + 120}`, "--window-position=40,40", "--test-type"],
+  `${SERVER}/blank.html`,
+);
 const cleanUp = async () => {
   const exited = new Promise((done) => child.once("exit", done));
   child.kill();
@@ -92,12 +117,15 @@ process.on("SIGINT", async () => {
 try {
   await cdp.send("Target.setDiscoverTargets", { discover: true });
   ({ id: extensionId } = await cdp.send("Extensions.loadUnpacked", { path: EXTENSION }));
+  if (extensionId !== expectedId) {
+    console.warn("Tolk's ID isn't the expected one, so its icon may not be pinned.");
+  }
   const extensionUrl = (page) => `chrome-extension://${extensionId}/${page}`;
   const tab = await firstPage();
-  await fitViewport(tab);
+  const toolbarHeight = await fitViewport(tab);
 
   console.log("Rendering covers and cards");
-  const images = await renderImages(tab);
+  const images = await renderImages(tab, toolbarHeight);
   for (const book of BOOKS) {
     writeEpub(join(WORK, "books", book.file), book, readFileSync(images.covers[book.file]));
   }
@@ -110,7 +138,7 @@ try {
 
   writeFileSync(
     join(WORK, "timeline.json"),
-    JSON.stringify({ width: WIDTH, height: HEIGHT, images, ...film }, null, 2),
+    JSON.stringify({ width: WIDTH, height: HEIGHT, toolbarHeight, images, ...film }, null, 2),
   );
   console.log(`Recorded ${film.frames.length} frames. Now run: node tools/video/assemble.mjs`);
 } finally {
@@ -157,6 +185,24 @@ async function fitViewport(page) {
   if (after.w !== WIDTH || after.h !== HEIGHT) {
     throw new Error(`The page is ${after.w} × ${after.h}, not ${WIDTH} × ${HEIGHT}. Is the screen big enough?`);
   }
+  const fitted = await cdp.send("Browser.getWindowForTarget", { targetId: page.targetId });
+  return fitted.bounds.height - HEIGHT;
+}
+
+/**
+ * Captures Chrome's own tab strip and toolbar from the screen, which the tab's
+ * frames don't include. Needs Screen Recording permission for the terminal.
+ */
+async function captureToolbar(page, name) {
+  await sleep(400);
+  const { bounds } = await cdp.send("Browser.getWindowForTarget", { targetId: page.targetId });
+  const file = join(WORK, "images", `toolbar-${name}.png`);
+  try {
+    execFileSync("screencapture", ["-x", `-R${bounds.left},${bounds.top},${bounds.width},${bounds.height - HEIGHT}`, file]);
+  } catch {
+    throw new Error("Couldn't capture the screen. Give the terminal Screen Recording permission in System Settings, then restart it.");
+  }
+  return { file, t: Date.now() / 1000 };
 }
 
 async function navigate(page, url) {
@@ -178,7 +224,7 @@ async function waitUntil(page, expression, timeoutMs = 20000) {
 
 // Images
 
-async function renderImages(page) {
+async function renderImages(page, toolbarHeight) {
   const images = { covers: {}, captions: {} };
   const shoot = async (name, html, width, height, transparent = false) => {
     writeFileSync(join(SITE, `${name}.html`), html);
@@ -198,8 +244,11 @@ async function renderImages(page) {
   for (const book of BOOKS) {
     images.covers[book.file] = await shoot(`cover-${book.file}`, coverHtml(book), 600, 900);
   }
-  images.title = await shoot("title", titleCardHtml(TITLE_CARD.heading, TITLE_CARD.line), WIDTH, HEIGHT);
-  images.closing = await shoot("closing", closingCardHtml(CLOSING_CARD.heading, CLOSING_CARD.line), WIDTH, HEIGHT);
+  // The cards fill the whole frame, toolbar included.
+  const full = HEIGHT + toolbarHeight;
+  images.title = await shoot("title", titleCardHtml(TITLE_CARD.heading, TITLE_CARD.line), WIDTH, full);
+  images.closing = await shoot("closing", closingCardHtml(CLOSING_CARD.heading, CLOSING_CARD.line), WIDTH, full);
+  images.pointer = await shoot("pointer", pointerHtml(), 40, 40, true);
   for (const shot of SHOTS) {
     if (shot.caption) {
       images.captions[shot.name] = await shoot(`caption-${shot.name}`, captionHtml(shot.caption), WIDTH, 110, true);
@@ -232,14 +281,22 @@ async function setUpProfile(page, extensionUrl) {
 
   // Chrome's translation and detection, created once from a click-like gesture,
   // so the reader finds them ready instead of offering a download.
+  // Each try is its own call, because a failed create() uses up the gesture.
+  let ready = false;
+  for (let i = 0; i < 30 && !ready; i++) {
+    ready = await page.evaluate(`(async () => {
+      try {
+        const translator = await Translator.create({ sourceLanguage: "nl", targetLanguage: "en" });
+        await translator.translate("De fiets.");
+        return true;
+      } catch {
+        return false;
+      }
+    })()`);
+    if (!ready) await sleep(1000);
+  }
+  if (!ready) throw new Error("Chrome couldn't make a Dutch to English translator");
   await page.evaluate(`(async () => {
-    let translator = null;
-    for (let i = 0; i < 30 && translator === null; i++) {
-      translator = await Translator.create({ sourceLanguage: "nl", targetLanguage: "en", monitor() {} }).catch((e) => { console.warn("translator", e.name, e.message, navigator.userActivation.isActive); return null; });
-      if (translator === null) await new Promise((done) => setTimeout(done, 1000));
-    }
-    if (translator === null) throw new Error("Chrome couldn't make a Dutch to English translator");
-    await translator.translate("De fiets.");
     const detector = await LanguageDetector.create();
     await detector.detect("Dit is een zin.");
     return true;
@@ -280,7 +337,7 @@ async function setUpProfile(page, extensionUrl) {
   })()`);
 
   // A first-run card would cover the opening shot, and it's already answered.
-  await navigate(page, "about:blank");
+  await navigate(page, `${SERVER}/blank.html`);
 }
 
 /** 30 days of plausible reading, written through the extension's own history store. */
@@ -358,24 +415,34 @@ async function filmShots(firstTab, extensionUrl) {
     console.log(`  ${name}`);
   };
 
-  // The article, on an ordinary web page.
-  await navigate(firstTab, `${SERVER}/article.html`);
-  await installCursor(firstTab);
+  const toolbars = [];
+
+  // The article, on an ordinary web page. Its pointer is drawn afterwards,
+  // because it has to reach the toolbar, which isn't part of the page.
+  await navigate(firstTab, `${SERVER}/fietsen`);
+  toolbars.push(await captureToolbar(firstTab, "article"));
   await film(firstTab);
   await sleep(800);
   shot("open");
-  await sleep(1200);
-  await moveTo(firstTab, WIDTH - 60, 40, 900);
-  await sleep(1200);
+  const toolbarClick = { appear: Date.now() / 1000 + 0.6 };
+  await sleep(1800);
+  toolbarClick.moveStart = Date.now() / 1000;
+  await sleep(1000);
+  toolbarClick.moveEnd = Date.now() / 1000;
+  await sleep(500);
+  toolbarClick.click = Date.now() / 1000;
 
-  // The toolbar click, as Chrome runs it.
+  // The click itself, as Chrome runs it.
   const tabs = await cdp.send("Target.getTargets", { filter: [{ type: "tab" }] });
   const opened = cdp.waitFor("Target.targetCreated", (p) => p.targetInfo.url.includes("reader.html"));
-  await cdp.send("Extensions.triggerAction", { id: extensionId, targetId: tabs.targetInfos.find((t) => t.url.endsWith("/article.html")).targetId });
+  await cdp.send("Extensions.triggerAction", { id: extensionId, targetId: tabs.targetInfos.find((t) => t.url.endsWith("/fietsen")).targetId });
   const reader = await preparePage((await opened).params.targetInfo.targetId);
   await waitUntil(reader, `document.querySelector("#reader [data-w]") !== null`);
   await film(reader);
-  await installCursor(reader, firstTab.mouse);
+  toolbarClick.end = Date.now() / 1000;
+  toolbars.push(await captureToolbar(reader, "reader"));
+  // The page's own pointer takes over just under the toolbar icon.
+  await installCursor(reader, { x: WIDTH - 280, y: 6 });
   await instrumentSpeech(reader);
   await waitUntil(reader, `document.getElementById("translation-status")?.textContent === "Ready"`, 30000);
   await sleep(1800);
@@ -387,14 +454,31 @@ async function filmShots(firstTab, extensionUrl) {
   await sleep(11000);
 
   shot("slower");
-  const slider = await centreOf(reader, "#speed-slider");
-  await moveTo(reader, slider.x, slider.y, 700);
-  // Several quick steps, so the voice restarts once at a clearly slower speed
-  // instead of repeating the same words at each step.
-  for (let i = 0; i < 6; i++) {
-    await press(reader, "[", "BracketLeft", 219);
-    await sleep(110);
+  // Drag the slider's thumb, as a reader would. Tolk applies the speed on release.
+  const thumbAt = (value) => reader.evaluate(`(() => {
+    const slider = document.getElementById("speed-slider");
+    const r = slider.getBoundingClientRect();
+    const min = Number(slider.min), max = Number(slider.max);
+    const value = ${value} === null ? Number(slider.value) : ${value};
+    const thumb = 8;
+    return { x: r.left + thumb + ((value - min) / (max - min)) * (r.width - 2 * thumb), y: r.top + r.height / 2 };
+  })()`);
+  const thumb = await thumbAt(null);
+  await moveTo(reader, thumb.x, thumb.y, 800);
+  await sleep(250);
+  await reader.send("Input.dispatchMouseEvent", { type: "mousePressed", x: thumb.x, y: thumb.y, button: "left", clickCount: 1 });
+  // -56 on the slider is about 50% speed. Local voices change pace in jumps, so a small step barely shows.
+  const target = await thumbAt(-56);
+  const steps = 30;
+  for (let i = 1; i <= steps; i++) {
+    const x = thumb.x + (target.x - thumb.x) * (i / steps);
+    await reader.send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y: thumb.y, button: "left", buttons: 1 });
+    await reader.evaluate(`__demoCursor(${x}, ${thumb.y}), true`);
+    await sleep(25);
   }
+  await reader.send("Input.dispatchMouseEvent", { type: "mouseReleased", x: target.x, y: thumb.y, button: "left", clickCount: 1 });
+  reader.mouse = { x: target.x, y: thumb.y };
+  console.log("  speed now", await reader.evaluate(`document.getElementById("speed-slider").value`));
   await sleep(7500);
   await clickOn(reader, "#player-play");
   await sleep(900);
@@ -437,6 +521,7 @@ async function filmShots(firstTab, extensionUrl) {
   await library.evaluate(`document.documentElement.style.zoom = "${ZOOM}", true`);
   await installCursor(library, reader.mouse);
   await film(library);
+  toolbars.push(await captureToolbar(library, "library"));
   await sleep(600);
   await smoothScroll(library, `document.getElementById("library-grid")`, 1000);
   await sleep(3500);
@@ -465,7 +550,7 @@ async function filmShots(firstTab, extensionUrl) {
   await sleep(400);
   await library.send("Page.stopScreencast");
   const speech = await reader.evaluate(`window.__demoSpeech ?? []`).catch(() => []);
-  return { frames, shots, speech, end: Date.now() / 1000 };
+  return { frames, shots, speech, toolbars, toolbarClick, end: Date.now() / 1000 };
 }
 
 async function waitForTarget(test, timeoutMs = 10000) {

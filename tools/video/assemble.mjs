@@ -29,7 +29,10 @@ const SHORTEST_CLIP = 0.35;
 
 const ffmpeg = findFfmpeg();
 const timeline = JSON.parse(readFileSync(join(WORK, "timeline.json"), "utf8"));
-const { width, height, frames, shots, speech, images } = timeline;
+const { width, height, frames, shots, speech, images, toolbars, toolbarClick } = timeline;
+const toolbarHeight = timeline.toolbarHeight;
+/** The page sits under Chrome's toolbar, and x264 needs an even height. */
+const frameHeight = height + toolbarHeight + ((height + toolbarHeight) % 2);
 const filmStart = frames[0].t;
 const filmSeconds = timeline.end - filmStart;
 const totalSeconds = TITLE_SECONDS + filmSeconds + CLOSING_SECONDS;
@@ -57,7 +60,7 @@ function findFfmpeg() {
 }
 
 function run(args) {
-  execFileSync(ffmpeg, ["-hide_banner", "-loglevel", "error", "-y", ...args], { stdio: ["ignore", "inherit", "inherit"] });
+  execFileSync(ffmpeg, ["-hide_banner", "-loglevel", "error", "-stats", "-y", ...args], { stdio: ["ignore", "inherit", "inherit"] });
 }
 
 /** Seconds of audio in a 16-bit mono WAV file written by ffmpeg. */
@@ -154,6 +157,26 @@ function srt(list) {
   return list.map((c, i) => `${i + 1}\n${stamp(c.start)} --> ${stamp(c.end)}\n${c.text}\n`).join("\n");
 }
 
+/** Finds Tolk's icon in the toolbar: the densest patch of its dark blue, right of the address bar. */
+function findToolbarIcon(file) {
+  const raw = execFileSync(ffmpeg, ["-hide_banner", "-loglevel", "error", "-i", file, "-vf", `scale=${width}:${toolbarHeight}`, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], { maxBuffer: 64 * 1024 * 1024 });
+  const isIconBlue = (x, y) => {
+    const i = (y * width + x) * 3;
+    const [r, g, b] = [raw[i], raw[i + 1], raw[i + 2]];
+    return r < 90 && g < 120 && b > 80 && b - r > 35;
+  };
+  const size = 14;
+  let best = { count: 0, x: width - 280, y: toolbarHeight - 24 };
+  for (let y = 0; y + size < toolbarHeight; y += 2) {
+    for (let x = Math.round(width * 0.6); x + size < width - 160; x += 2) {
+      let count = 0;
+      for (let dy = 0; dy < size; dy += 2) for (let dx = 0; dx < size; dx += 2) count += isIconBlue(x + dx, y + dy) ? 1 : 0;
+      if (count > best.count) best = { count, x: x + size / 2, y: y + size / 2 };
+    }
+  }
+  return best;
+}
+
 function encode(voice, captionList) {
   // The concat demuxer needs one image format, so the cards become JPEGs too.
   const titleJpg = join(WORK, "title.jpg");
@@ -172,24 +195,63 @@ function encode(voice, captionList) {
   writeFileSync(list, lines.join("\n") + "\n");
 
   const inputs = ["-f", "concat", "-safe", "0", "-i", list];
+  let input = 0;
+  const nextInput = () => ++input;
+  // The page's frames go under the toolbar. The cards are already full height.
   const filters = [
-    `[0:v]scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:color=0xfbf8f1,fps=${FPS},format=yuv420p,` +
-      `fade=t=in:st=0:d=0.6,fade=t=out:st=${(totalSeconds - 0.8).toFixed(3)}:d=0.8[v0]`,
+    `[0:v]pad=${width}:${frameHeight}:0:'if(eq(ih,${height}),${toolbarHeight},0)':color=0xfbf8f1,fps=${FPS},format=yuv420p[base]`,
   ];
+  let last = "base";
+
+  // Each tab's own toolbar, from when it was filmed until the next one.
+  const filmEnd = at(timeline.end);
+  toolbars.forEach((toolbar, i) => {
+    const start = i === 0 ? TITLE_SECONDS : at(toolbar.t - 0.45);
+    const end = i + 1 < toolbars.length ? at(toolbars[i + 1].t - 0.45) : filmEnd;
+    const n = nextInput();
+    inputs.push("-loop", "1", "-t", totalSeconds.toFixed(3), "-i", toolbar.file);
+    filters.push(`[${n}:v]scale=${width}:${toolbarHeight},format=rgba[t${i}]`);
+    filters.push(`[${last}][t${i}]overlay=0:0:enable='between(t,${start.toFixed(3)},${end.toFixed(3)})':eof_action=pass[bt${i}]`);
+    last = `bt${i}`;
+  });
+
+  // The opening shot's pointer moves from the page up to Tolk's icon and clicks it.
+  const icon = findToolbarIcon(toolbars[0].file);
+  console.log(`  Tolk's icon found at ${icon.x}, ${icon.y}`);
+  const from = { x: width * 0.55, y: toolbarHeight + height * 0.55 };
+  const m0 = at(toolbarClick.moveStart).toFixed(3);
+  const m1 = at(toolbarClick.moveEnd).toFixed(3);
+  const ease = `(st(0,clip((t-${m0})/(${m1}-${m0}),0,1))*ld(0)*(3-2*ld(0)))`;
+  // The arrow's tip is 4 px in and 3 px down from the image's corner.
+  const along = (a, b, tip) => `${(a - tip).toFixed(1)}+(${(b - a).toFixed(1)})*${ease}`;
+  const pointer = nextInput();
+  inputs.push("-loop", "1", "-t", totalSeconds.toFixed(3), "-i", images.pointer);
+  filters.push(`[${pointer}:v]format=rgba[pointer]`);
+  filters.push(
+    `[${last}][pointer]overlay=x='${along(from.x, icon.x, 4)}':y='${along(from.y, icon.y, 3)}'` +
+      `:enable='between(t,${at(toolbarClick.appear).toFixed(3)},${(at(toolbarClick.click) + 0.4).toFixed(3)})':eval=frame:eof_action=pass[withPointer]`,
+  );
+  last = "withPointer";
+
   captionList.forEach((caption, i) => {
     const duration = caption.end - caption.start;
+    const n = nextInput();
     inputs.push("-loop", "1", "-t", duration.toFixed(3), "-i", caption.image);
     filters.push(
-      `[${i + 1}:v]format=rgba,fade=t=in:st=0:d=0.3:alpha=1,fade=t=out:st=${(duration - 0.3).toFixed(3)}:d=0.3:alpha=1,setpts=PTS+${caption.start.toFixed(3)}/TB[c${i}]`,
-      `[v${i}][c${i}]overlay=0:${height - 110 - 30}:eof_action=pass[v${i + 1}]`,
+      `[${n}:v]format=rgba,fade=t=in:st=0:d=0.3:alpha=1,fade=t=out:st=${(duration - 0.3).toFixed(3)}:d=0.3:alpha=1,setpts=PTS+${caption.start.toFixed(3)}/TB[c${i}]`,
+      `[${last}][c${i}]overlay=0:${frameHeight - 110 - 30}:eof_action=pass[v${i}]`,
     );
+    last = `v${i}`;
   });
+  filters.push(`[${last}]fade=t=in:st=0:d=0.6,fade=t=out:st=${(totalSeconds - 0.8).toFixed(3)}:d=0.8[out]`);
+
+  const audioInput = nextInput();
   inputs.push("-i", voice);
   run([
     ...inputs,
     "-filter_complex", filters.join(";"),
-    "-map", `[v${captionList.length}]`,
-    "-map", `${captionList.length + 1}:a`,
+    "-map", "[out]",
+    "-map", `${audioInput}:a`,
     "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-r", String(FPS),
     "-c:a", "aac", "-b:a", "160k",
     "-t", totalSeconds.toFixed(3),

@@ -6,7 +6,7 @@ import { spawn } from "node:child_process";
 
 export const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-export function launchChrome(profileDir, extraArgs = []) {
+export function launchChrome(profileDir, extraArgs = [], startUrl = "about:blank") {
   const child = spawn(
     CHROME,
     [
@@ -18,7 +18,7 @@ export function launchChrome(profileDir, extraArgs = []) {
       "--disable-search-engine-choice-screen",
       "--hide-crash-restore-bubble",
       ...extraArgs,
-      "about:blank",
+      startUrl,
     ],
     { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] },
   );
