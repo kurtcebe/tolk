@@ -213,7 +213,7 @@ A tank of water the full width of the section and 200 px tall, showing the last 
 - **Reduced motion:** with `prefers-reduced-motion`, the tank is drawn once and stays still: fish where they are, no bubbles, no swaying, no flicker in the light, no shimmer on silver fish. A highlight redraws it once.
 - **Off screen:** the tank stops drawing while it's scrolled out of view or the tab is hidden.
 - **Light:** two soft rays of light fall from the surface and flicker slowly. The water's colour shifts gently from top to bottom.
-- **Cover dot:** a book with a colour has a 10 px dot in that colour on its library card, inset 6 px from the cover's top-right corner, with a 2 px ring in the card's background colour so it shows on any cover. A book that has never been read has no colour yet, and no dot.
+- **Cover dot:** a book with a colour has a 10 px dot in that colour on its library card, inset 6 px from the cover's top-left corner, clear of the `⋯` menu, with a 2 px ring in the card's background colour so it shows on any cover. A book that has never been read has no colour yet, and no dot.
 
 Colours, per scheme. Water is a top-to-bottom gradient. Books take colours 1 to 8 in order. These were chosen without seeing them on the page, so check them by eye in each scheme, including that the 8 book colours and silver are told apart on the water.
 

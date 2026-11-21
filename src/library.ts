@@ -2,6 +2,7 @@
 // comes from a book, so it only ever goes in as text (invariant 4).
 
 import { mountAppearance } from "./appearance.js";
+import { highlightBook } from "./aquarium.js";
 import {
   addBook,
   deleteBook,
@@ -13,7 +14,7 @@ import { requireElement } from "./controls.js";
 import { mountDrawerToggles } from "./drawer.js";
 import { EpubError, type EpubProblem } from "./epub.js";
 import { openBook } from "./epub-document.js";
-import { mountReadingHistory, refreshHistory, renderHistory } from "./library-history.js";
+import { bookColour, mountReadingHistory, refreshHistory, renderHistory } from "./library-history.js";
 import { isLibraryNote, LIBRARY_NOTES } from "./library-notes.js";
 import { mountSavedWords } from "./saved-words.js";
 import { loadSavedWords } from "./saved-words-store.js";
@@ -51,7 +52,7 @@ async function start(): Promise<void> {
     mountSavedWords();
     void loadSavedWords();
     mountImport();
-    mountReadingHistory((bookId) => books.find((book) => book.id === bookId)?.title ?? null);
+    mountReadingHistory((bookId) => books.find((book) => book.id === bookId)?.title ?? null, render);
     subscribeBooks(() => void refresh());
     // Coming back from a book through the Back button doesn't reload this page.
     window.addEventListener("pageshow", () => void refresh());
@@ -179,6 +180,9 @@ function render(): void {
   requireElement("library-empty").hidden = !isEmpty || loadFailed;
 
   dropUnusedCovers();
+  // A card that's replaced never gets its pointerleave, so the highlight ends here.
+  // The next pointer move over a new card starts it again.
+  highlightBook(null);
   requireElement("library-grid").replaceChildren(
     ...imports.map(renderImport),
     ...sorted.map(renderBook),
@@ -222,6 +226,20 @@ function renderBook(book: Book): HTMLElement {
   }
   link.append(renderProgress(book));
   card.append(link);
+
+  // A book that's been read has a colour: a dot on its cover, and its fish in the
+  // aquarium stand out while the card is pointed at or focused.
+  const colour = bookColour(book.id);
+  if (colour !== null) {
+    const dot = document.createElement("span");
+    dot.className = "book-dot";
+    dot.dataset["colour"] = String(colour + 1);
+    card.append(dot);
+    card.addEventListener("pointerenter", () => highlightBook(book.id));
+    card.addEventListener("pointerleave", () => highlightBook(null));
+    card.addEventListener("focusin", () => highlightBook(book.id));
+    card.addEventListener("focusout", () => highlightBook(null));
+  }
 
   if (confirmingDelete === book.id) {
     card.append(renderConfirmation(book));

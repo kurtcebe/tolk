@@ -1,18 +1,20 @@
 // "Your reading" in the library: the aquarium, a month calendar of reading time, the
 // chosen day's totals per language, and the month's total. It only reads
-// history-store.ts, apart from clearing. Book titles are the reader's own data, so
-// they go in as text.
+// history-store.ts, apart from giving out book colours and language shapes, and
+// clearing. Book titles are the reader's own data, so they go in as text.
 
 import { mountAquarium, setTank } from "./aquarium.js";
 import { buildTank, countLine, tankStart, type Tank } from "./aquarium-data.js";
 import { requireElement } from "./controls.js";
 import {
+  assignIdentities,
   clearHistory,
   firstDate,
   localDate,
   readDays,
   readFinishes,
   type DayTotals,
+  type Identities,
 } from "./history-store.js";
 import { languageName } from "./languages.js";
 import { formatDuration, formatWords, UI_LOCALE } from "./reading-format.js";
@@ -30,11 +32,18 @@ let days: DayTotals[] = [];
 /** Every day from the first with history to today, for the aquarium's streak and plants. */
 let allDays: DayTotals[] = [];
 let finished = 0;
+let identities: Identities = emptyIdentities();
 let titleOf: (bookId: string) => string | null = () => null;
+let onColours: () => void = () => {};
 
-/** `bookTitle` names a book by ID, or returns null for one that's been deleted. */
-export function mountReadingHistory(bookTitle: (bookId: string) => string | null): void {
+/**
+ * `bookTitle` names a book by ID, or returns null for one that's been deleted.
+ * `coloursChanged` is called after history loads, so the book cards can show
+ * their colours.
+ */
+export function mountReadingHistory(bookTitle: (bookId: string) => string | null, coloursChanged: () => void): void {
   titleOf = bookTitle;
+  onColours = coloursChanged;
   const tank = requireElement("aquarium-tank");
   if (tank instanceof HTMLCanvasElement) {
     mountAquarium(tank);
@@ -58,6 +67,7 @@ export function mountReadingHistory(bookTitle: (bookId: string) => string | null
 export async function refreshHistory(): Promise<void> {
   try {
     earliest = await firstDate();
+    identities = earliest === null ? emptyIdentities() : await assignIdentities();
     const from = localDate(shown);
     const to = localDate(new Date(shown.getFullYear(), shown.getMonth() + 1, 0));
     days = earliest === null ? [] : await readDays(from, to);
@@ -72,8 +82,19 @@ export async function refreshHistory(): Promise<void> {
     days = [];
     allDays = [];
     finished = 0;
+    identities = emptyIdentities();
   }
   renderHistory();
+  onColours();
+}
+
+/** A book's colour index, or null for a book that hasn't been read. */
+export function bookColour(bookId: string): number | null {
+  return identities.colours.get(bookId) ?? null;
+}
+
+function emptyIdentities(): Identities {
+  return { colours: new Map(), shapes: new Map() };
 }
 
 /** Book titles can change when books are added or deleted. */
@@ -102,7 +123,7 @@ function currentTank(): Tank {
   const now = new Date();
   const since = tankStart(now).getTime();
   const wordsSaved = getSavedWords().filter((word) => word.savedAt >= since).length;
-  return buildTank(allDays, now, wordsSaved, finished);
+  return buildTank(allDays, identities, now, wordsSaved, finished);
 }
 
 function moveMonth(direction: -1 | 1): void {
