@@ -7,6 +7,7 @@ import { updateBook } from "./book-store.js";
 import { getChapterIndex, subscribeChapter } from "./chapter-view.js";
 import type { TolkDocument } from "./document.js";
 import { jumpTo } from "./follow.js";
+import { recordFinish } from "./history-store.js";
 import {
   activeRange,
   getBlocks,
@@ -45,6 +46,7 @@ export function trackPosition(document_: TolkDocument, bookId: string): void {
   setIdleStart(firstSentenceOnScreen);
   const lengths = document_.chapters.map((chapter) => chapterLength(chapter.blocks));
   let lastSaved = "";
+  let finished = false;
 
   const save = async (): Promise<void> => {
     const place = currentPlace();
@@ -52,6 +54,10 @@ export function trackPosition(document_: TolkDocument, bookId: string): void {
     const block = place === null ? undefined : getBlocks()[place.blockIndex];
     if (place === null || chapter === undefined || block === undefined) {
       return;
+    }
+    if (!finished && hasReachedEnd(document_, place.blockIndex)) {
+      finished = true;
+      void markFinished(bookId);
     }
     const position = { chapterId: chapter.id, blockId: block.blockId, wordIndex: place.wordIndex };
     const key = JSON.stringify(position);
@@ -165,6 +171,28 @@ function progressAt(
   const blockAt = blocks.findIndex((block) => block.id === blockId);
   const within = chapterLength(blocks.slice(0, Math.max(0, blockAt)));
   return total === 0 ? 0 : (before + within) / total;
+}
+
+/** The last block of the last chapter is where the reader is, or has come into view. */
+function hasReachedEnd(document_: TolkDocument, blockIndex: number): boolean {
+  if (getChapterIndex() !== document_.chapters.length - 1) {
+    return false;
+  }
+  const blocks = getBlocks();
+  const first = blocks.at(-1)?.words[0]?.element;
+  return (
+    blockIndex === blocks.length - 1 ||
+    (first !== undefined && first.getBoundingClientRect().top < window.innerHeight)
+  );
+}
+
+/** A finish is history, so the store keeps only the first one for each book. */
+async function markFinished(bookId: string): Promise<void> {
+  try {
+    await recordFinish(bookId, new Date());
+  } catch (error) {
+    console.warn("Couldn't record finishing the book.", error);
+  }
 }
 
 function isLastWordOnScreen(): boolean {

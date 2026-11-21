@@ -34,7 +34,7 @@ A block's `html` is untrusted, whatever its source. `render.ts` parses it in an 
 
 - **Books:** IndexedDB, as original file blobs plus parsed metadata and reading position. `localStorage` is too small and only holds strings. They have their own `tolk-books` database, with the file in a separate store from the details, so saving a position never touches the file and adding books can't put saved words at risk.
 - **Saved words:** IndexedDB, so they stay local. `unlimitedStorage` exempts them from eviction when disk space runs low, and shows no warning at install. A saved word's source is stored by value, so it outlives the book it came from.
-- **Reading history:** IndexedDB, in its own `tolk-history` database, so clearing it can't touch books or saved words. One record per local date and language, holding seconds, words, and seconds per book ID. Nothing about what was read, and live articles are pooled without a URL. Never synced.
+- **Reading history:** IndexedDB, in its own `tolk-history` database, so clearing it can't touch books or saved words. One record per local date and language, holding seconds, words, and seconds per book ID, and a record of each book finished. Nothing about what was read, and live articles are pooled without a URL. Never synced.
 - **Settings:** `chrome.storage.sync`.
 - **Voice choices:** `chrome.storage.local`, so a remote voice picked on one computer never applies on another.
 - **Model output:** in memory only. Don't persist it.
@@ -155,7 +155,8 @@ Detection can finish after the reader is built, and an override can come at any 
 - **Time:** a one-second tick adds a second while the tab is visible and either speech is playing or there's been a scroll, selection or chapter change in the last 60 seconds. The tick stops while the tab is hidden, rather than ticking and doing nothing.
 - **Words:** a set of chapter, block and word positions per open document. When scrolling settles, and every 5 seconds while time counts, the words on screen join it. While speech plays, each tick adds the sentence being spoken, since speech doesn't tell listeners about each word. Words read is the set's growth. A block re-tokenized by the mutation path can count some words twice, which is accepted, since the number is a rough measure.
 - **Writes:** totals build in memory and are added to the stored record every 30 seconds, and on `pagehide` and when the tab is hidden. Closing a tab can lose up to the last 30 seconds.
-- **Library:** reads the records for the month shown. The library never writes, apart from clearing.
+- **Finishes:** the reader records a book as finished in the `finished` store, keyed by book ID with the date, the first time the last block of its last chapter is reached. It's history, not part of the book, so it outlives the book and clearing history removes it.
+- **Library:** reads the records for the month shown, plus every day back to the first for the aquarium's streak and plants, and the finishes for its shells. `aquarium-data.ts` turns those into fish, a streak and a growth level, and `aquarium.ts` only draws. The library never writes, apart from clearing.
 
 ## State
 

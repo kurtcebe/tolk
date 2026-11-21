@@ -1,11 +1,22 @@
-// "Your reading" in the library: a month calendar of reading time, the chosen day's
-// totals per language, and the month's total. It only reads history-store.ts,
-// apart from clearing. Book titles are the reader's own data, so they go in as text.
+// "Your reading" in the library: the aquarium, a month calendar of reading time, the
+// chosen day's totals per language, and the month's total. It only reads
+// history-store.ts, apart from clearing. Book titles are the reader's own data, so
+// they go in as text.
 
+import { mountAquarium, setTank } from "./aquarium.js";
+import { buildTank, countLine, tankStart, type Tank } from "./aquarium-data.js";
 import { requireElement } from "./controls.js";
-import { clearHistory, firstDate, localDate, readDays, type DayTotals } from "./history-store.js";
+import {
+  clearHistory,
+  firstDate,
+  localDate,
+  readDays,
+  readFinishes,
+  type DayTotals,
+} from "./history-store.js";
 import { languageName } from "./languages.js";
 import { formatDuration, formatWords, UI_LOCALE } from "./reading-format.js";
+import { getSavedWords, subscribeSavedWords } from "./saved-words-store.js";
 import { isRecord } from "./state.js";
 
 const LEVELS = 3;
@@ -16,11 +27,20 @@ let shown = firstOfMonth(new Date());
 let chosen = localDate(new Date());
 let earliest: string | null = null;
 let days: DayTotals[] = [];
+/** Every day from the first with history to today, for the aquarium's streak and plants. */
+let allDays: DayTotals[] = [];
+let finished = 0;
 let titleOf: (bookId: string) => string | null = () => null;
 
 /** `bookTitle` names a book by ID, or returns null for one that's been deleted. */
 export function mountReadingHistory(bookTitle: (bookId: string) => string | null): void {
   titleOf = bookTitle;
+  const tank = requireElement("aquarium-tank");
+  if (tank instanceof HTMLCanvasElement) {
+    mountAquarium(tank);
+  }
+  // Saved words load on their own, and can change in another tab.
+  subscribeSavedWords(renderAquarium);
   requireElement("history-previous").addEventListener("click", () => moveMonth(-1));
   requireElement("history-next").addEventListener("click", () => moveMonth(1));
   requireElement("history-clear").addEventListener("click", () => confirmClear(true));
@@ -41,6 +61,8 @@ export async function refreshHistory(): Promise<void> {
     const from = localDate(shown);
     const to = localDate(new Date(shown.getFullYear(), shown.getMonth() + 1, 0));
     days = earliest === null ? [] : await readDays(from, to);
+    allDays = earliest === null ? [] : await readDays(earliest, localDate(new Date()));
+    finished = earliest === null ? 0 : (await readFinishes()).length;
     if (chosen < from || chosen > to) {
       chosen = defaultDay(from, to);
     }
@@ -48,6 +70,8 @@ export async function refreshHistory(): Promise<void> {
     console.warn("Couldn't load reading history.", error);
     earliest = null;
     days = [];
+    allDays = [];
+    finished = 0;
   }
   renderHistory();
 }
@@ -56,6 +80,8 @@ export async function refreshHistory(): Promise<void> {
 export function renderHistory(): void {
   const section = requireElement("history");
   section.hidden = earliest === null;
+  // Cleared history empties the tank too, even while it's hidden.
+  renderAquarium();
   if (earliest === null) {
     return;
   }
@@ -63,6 +89,20 @@ export function renderHistory(): void {
   renderCalendar();
   renderChosenDay();
   renderMonthTotal();
+}
+
+function renderAquarium(): void {
+  const tank = currentTank();
+  setTank(tank);
+  requireElement("aquarium-count").textContent = countLine(tank);
+}
+
+/** Saved words and fish both cover the last 30 days, today included. */
+function currentTank(): Tank {
+  const now = new Date();
+  const since = tankStart(now).getTime();
+  const wordsSaved = getSavedWords().filter((word) => word.savedAt >= since).length;
+  return buildTank(allDays, now, wordsSaved, finished);
 }
 
 function moveMonth(direction: -1 | 1): void {
