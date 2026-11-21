@@ -19,6 +19,16 @@
         hidden
       >
         <h2 id="history-title" class="history-title">Your reading</h2>
+        <div class="aquarium">
+          <!-- The count line names the picture, so a screen reader hears it once, here. -->
+          <canvas
+            id="aquarium-tank"
+            class="aquarium-tank"
+            role="img"
+            aria-labelledby="aquarium-count"
+          ></canvas>
+          <p id="aquarium-count" class="aquarium-count" aria-hidden="true"></p>
+        </div>
         <div class="history-body">
           <div class="history-month">
             <div id="history-months" class="history-months">

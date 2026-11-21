@@ -215,6 +215,71 @@
   font-weight: 600;
 }
 
+/* The aquarium: one canvas at a fixed height, so it never moves the page. Its
+   colours are tokens per scheme, which aquarium.ts reads from here. */
+
+[data-scheme="light"] {
+  --aquarium-water-top: #cfe3ee;
+  --aquarium-water-bottom: #7fa9c4;
+  --aquarium-floor: #d9cbae;
+  --aquarium-book: #e07a2e;
+  --aquarium-article: #1f8a86;
+  --aquarium-plant: #4e8a4a;
+  --aquarium-shell: #f3e6d8;
+  --aquarium-ray: 0.45;
+}
+
+[data-scheme="sepia"] {
+  --aquarium-water-top: #d6dfd2;
+  --aquarium-water-bottom: #93a99e;
+  --aquarium-floor: #c9b48f;
+  --aquarium-book: #c8692a;
+  --aquarium-article: #2a7c73;
+  --aquarium-plant: #5b7d45;
+  --aquarium-shell: #f1e2c8;
+  --aquarium-ray: 0.4;
+}
+
+[data-scheme="dark"] {
+  --aquarium-water-top: #1c3346;
+  --aquarium-water-bottom: #0f1c28;
+  --aquarium-floor: #2b2a26;
+  --aquarium-book: #f0a060;
+  --aquarium-article: #5cc8be;
+  --aquarium-plant: #4f8c5a;
+  --aquarium-shell: #c9b9a6;
+  --aquarium-ray: 0.12;
+}
+
+[data-scheme="dim"] {
+  --aquarium-water-top: #253847;
+  --aquarium-water-bottom: #18242e;
+  --aquarium-floor: #34332e;
+  --aquarium-book: #d9955e;
+  --aquarium-article: #6bb3ab;
+  --aquarium-plant: #577a5c;
+  --aquarium-shell: #b5a897;
+  --aquarium-ray: 0.1;
+}
+
+.aquarium {
+  margin-bottom: 24px;
+}
+
+.aquarium-tank {
+  display: block;
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  background: var(--aquarium-water-bottom);
+  touch-action: pan-y;
+}
+
+.aquarium-count {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
 /* The month's name and arrows sit right above the calendar, at its width. */
 .history-month {
   display: flex;

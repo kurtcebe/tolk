@@ -6,8 +6,10 @@ import { committed, settled } from "./idb.js";
 import { isRecord } from "./state.js";
 
 const DATABASE = "tolk-history";
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 const STORE = "days";
+/** Books finished, by book ID. A finish belongs to reading history, so it outlives the book. */
+const FINISHED = "finished";
 
 export interface DayTotals {
   /** The computer's local date, as YYYY-MM-DD. */
@@ -30,6 +32,14 @@ export interface Addition {
   words: number;
   /** Null for a live article. */
   bookId: string | null;
+}
+
+export interface Finish {
+  bookId: string;
+  /** The local date it was finished, as YYYY-MM-DD. */
+  date: string;
+  /** When, in milliseconds, so finishes on the same day keep their order. */
+  at: number;
 }
 
 let opening: Promise<IDBDatabase> | null = null;
@@ -78,10 +88,32 @@ export async function firstDate(): Promise<string | null> {
   return day?.date ?? null;
 }
 
+/** Only the first finish counts, so reading a book again doesn't count it twice. */
+export async function recordFinish(bookId: string, when: Date): Promise<void> {
+  const database = await openDatabase();
+  const transaction = database.transaction(FINISHED, "readwrite");
+  const store = transaction.objectStore(FINISHED);
+  const stored: unknown = await settled(store.get(bookId));
+  if (parseFinish(stored) === null) {
+    const finish: Finish = { bookId, date: localDate(when), at: when.getTime() };
+    store.put(finish);
+  }
+  await committed(transaction);
+}
+
+/** Every book ever finished, in the order they were finished. */
+export async function readFinishes(): Promise<Finish[]> {
+  const database = await openDatabase();
+  const store = database.transaction(FINISHED).objectStore(FINISHED);
+  const stored: unknown[] = await settled(store.getAll());
+  return stored.flatMap((entry) => parseFinish(entry) ?? []).sort((first, second) => first.at - second.at);
+}
+
 export async function clearHistory(): Promise<void> {
   const database = await openDatabase();
-  const transaction = database.transaction(STORE, "readwrite");
+  const transaction = database.transaction([STORE, FINISHED], "readwrite");
   transaction.objectStore(STORE).clear();
+  transaction.objectStore(FINISHED).clear();
   await committed(transaction);
 }
 
@@ -117,8 +149,15 @@ function openDatabase(): Promise<IDBDatabase> {
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE, DATABASE_VERSION);
+    // Version 1 had only the days, so an upgrade from it adds what's missing.
     request.addEventListener("upgradeneeded", () => {
-      request.result.createObjectStore(STORE, { keyPath: ["date", "language"] });
+      const names = request.result.objectStoreNames;
+      if (!names.contains(STORE)) {
+        request.result.createObjectStore(STORE, { keyPath: ["date", "language"] });
+      }
+      if (!names.contains(FINISHED)) {
+        request.result.createObjectStore(FINISHED, { keyPath: "bookId" });
+      }
     });
     request.addEventListener("error", () => reject(request.error));
     request.addEventListener("success", () => {
@@ -155,6 +194,17 @@ function parseDay(stored: unknown): DayTotals | null {
     }
   }
   return { date, language, seconds, words, books, articleSeconds };
+}
+
+function parseFinish(stored: unknown): Finish | null {
+  if (!isRecord(stored)) {
+    return null;
+  }
+  const { bookId, date, at } = stored;
+  if (typeof bookId !== "string" || typeof date !== "string" || !isCount(at)) {
+    return null;
+  }
+  return { bookId, date, at };
 }
 
 function isCount(value: unknown): value is number {
