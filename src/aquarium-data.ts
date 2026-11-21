@@ -9,8 +9,8 @@ import { UI_LOCALE } from "./reading-format.js";
 /** How many days the tank looks back over, today included. */
 export const TANK_DAYS = 30;
 const MINUTE = 60;
-/** A source under this share of the day is left out of its fish. */
-const LEAST_SHARE = 0.1;
+/** Head and tail are each drawn at least this share of the fish's length. */
+const LEAST_PART = 0.2;
 /** Plant growth is counted in days, and these are where a stage starts. */
 const STAGES = [0, 3, 7, 14, 30];
 const FULL_GROWTH = 30;
@@ -28,7 +28,12 @@ export interface TankFish {
   head: Source;
   /** The second largest, or null when there's only one. */
   tail: Source | null;
-  /** The head's share of the fish's length: its share of the two sources' time. */
+  /** The third largest, drawn as stripes, or null. */
+  stripes: Source | null;
+  /**
+   * The head's share of the fish's length: its share of the head and tail's time,
+   * kept between 20% and 80% so the tail always shows. 1 with no tail.
+   */
   split: number;
   /** An index into the fish shapes, from the day's longest-read language. */
   shape: number;
@@ -118,12 +123,12 @@ function stageBelow(growth: number): number {
 }
 
 /**
- * The day's two largest sources, each book on its own and articles together, the
- * larger as the head. A source under 10% of the day is left out, unless that would
- * leave nothing. A book or language without an identity yet falls back to the first.
+ * The day's three largest sources, each book on its own and articles together: the
+ * head, the tail and the stripes. A source read for under a minute is left out,
+ * unless that would leave nothing. A book or language without an identity yet falls
+ * back to the first.
  */
 function fishFor(date: string, onDay: readonly DayTotals[], identities: Identities): TankFish {
-  const day = totalSeconds(onDay);
   const sources: [Source, number][] = [];
   let articleSeconds = 0;
   const bookSeconds = new Map<string, number>();
@@ -140,14 +145,18 @@ function fishFor(date: string, onDay: readonly DayTotals[], identities: Identiti
   const ranked = sources
     .filter(([, seconds]) => seconds > 0)
     .sort(([first, firstSeconds], [second, secondSeconds]) => secondSeconds - firstSeconds || sourceKey(first).localeCompare(sourceKey(second)));
-  const kept = ranked.filter(([, seconds]) => seconds >= day * LEAST_SHARE);
-  const [head, tail] = kept.length > 0 ? kept : ranked;
+  const kept = ranked.filter(([, seconds]) => seconds >= MINUTE);
+  const [head, tail, stripes] = kept.length > 0 ? kept : ranked.slice(0, 1);
   const language = longestLanguage(onDay);
   return {
     date,
     head: head?.[0] ?? { kind: "articles" },
     tail: tail?.[0] ?? null,
-    split: head === undefined || tail === undefined ? 1 : head[1] / (head[1] + tail[1]),
+    stripes: stripes?.[0] ?? null,
+    split:
+      head === undefined || tail === undefined
+        ? 1
+        : Math.min(1 - LEAST_PART, Math.max(LEAST_PART, head[1] / (head[1] + tail[1]))),
     shape: language === null ? 0 : (identities.shapes.get(language) ?? 0),
   };
 }
