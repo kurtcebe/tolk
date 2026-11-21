@@ -22,13 +22,13 @@ How a version gets from `main` to the Chrome Web Store, and the listing text to 
 
 ## Publishing
 
-1. Push `main` and the release tag to GitHub. The listing's homepage, support and privacy links point there, so this has to happen before submitting. Before the first push, check the history for anything private: tickets and `CLAUDE.local.md` are gitignored, and commits use the noreply address.
+1. Push `main` to GitHub, without a tag yet. The listing's homepage, support and privacy links point there, so this has to happen before submitting. Before the first push, check the history for anything private: tickets and `CLAUDE.local.md` are gitignored, and commits use the noreply address.
 2. In the [developer dashboard](https://chrome.google.com/webstore/devconsole), upload the zip. For a new item, choose *Add new item*. For an update, use the item's Package tab.
 3. Fill in or check Store listing, Privacy, Distribution and Test instructions, using the text below.
 4. Choose *Submit for review*, and **untick publishing automatically** in the confirm dialog. After review, there are 30 days to publish before the submission goes back to draft.
 5. When it passes, install the staged version in a fresh profile if the dashboard offers it, then publish.
 6. After publishing, install from the store in a fresh profile and check that the capability stub is ignored: in a reader tab's console, `chrome.storage.local.set({ capabilityStub: { translator: "unavailable" } })` and a reload should change nothing.
-7. Tag the release as `v<version>`, and on the first release, add the store link to the README.
+7. Tag the published commit as `v<version>` and push the tag. The tag waits until now because review may ask for changes, and the tag should mark what's in the store. On the first release, also add the store link to the README.
 
 Review usually takes a few days and sometimes a few weeks. New developers and new extensions get a closer look. If it's pending for more than three weeks, contact developer support. A rejection email names the policy it broke and how to appeal.
 
