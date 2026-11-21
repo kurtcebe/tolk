@@ -34,7 +34,13 @@ Review usually takes a few days and sometimes a few weeks. New developers and ne
 
 ## The developer account
 
-Registered once, from the dashboard link above: agree to the developer agreement, pay the one-time fee, then fill in the Account page and verify the contact email. The account's email can never be changed afterwards. Turn on the review and staged notifications on the Account page.
+Registered once, from the dashboard link above: agree to the developer agreement, pay the one-time fee, then fill in the Settings page. The account's email can never be changed afterwards.
+
+On the Settings page:
+
+- **Publisher contact email:** required before anything can be published, and confirmed through a link Chrome emails to it. Chrome sends review results there, and it may be shown on the listing. Tolk uses the account's own address.
+- **Trader status:** non-trader. Tolk is a free, open source project with no business behind it.
+- **Notifications:** turn on the review and staged-item notifications.
 
 A new publisher can have at most two published extensions until they ask for more.
 
@@ -68,11 +74,13 @@ A new publisher can have at most two published extensions until they ask for mor
 >
 > The screenshots and video show the Dutch Wikipedia article “Stroopwafel”, under CC BY-SA 4.0.
 
-**Category:** Education, if the dashboard still has it. **Language:** English.
+**Category:** Education. **Language:** English.
 
 **Homepage URL:** https://github.com/kurtcebe/tolk
 
 **Support URL:** https://github.com/kurtcebe/tolk/issues
+
+**Official URL:** None. The field only offers sites verified as yours in Google Search Console, and github.com can't be. It can point to a page on a verified domain of our own later.
 
 ### Images
 
@@ -85,6 +93,8 @@ All images use our own artwork, and only public domain or properly licensed text
 | Small promo tile | 440 × 280 PNG or JPEG | No, but items without one are listed after items with one | The aquarium in the light scheme with Tolk's icon, and no text. See below |
 | Marquee | 1400 × 560 | Only to be featured there | Skip for now |
 | Video | A YouTube link, in the promo video field | No | https://youtu.be/nAt9-FO5FM4, see below |
+
+Upload the screenshots in their numbered order, 1 to 5, since the first is the one shown first.
 
 ### Making the images
 
@@ -128,6 +138,8 @@ Both scripts write to `dist/store/`.
 Free, public, in all countries.
 
 ## Test instructions
+
+Leave the username and password empty. Paste this into the additional instructions:
 
 > No account or sign-in is needed. Click the toolbar icon on an article, for example a Wikipedia page, to open it in the reader. Press Play to hear it read aloud with word highlighting, select a word to translate it, and press the star to save it. Right-click the toolbar icon and choose Open library to import an EPUB, for example any book from Project Gutenberg.
 >
@@ -229,7 +241,40 @@ It draws the cards and captions in a headless Chrome with Tolk's own fonts, leve
 ### Before uploading
 
 - Watch it all the way through with sound: the highlight and voice in sync, no first-run card, no developer-mode banner, no notifications, and nothing from your own profile.
-- Upload to YouTube under an account you're happy to have public, with the `.srt` as English captions. Put the article credit in the description: "Stroopwafel", Dutch Wikipedia, CC BY-SA 4.0, with a link to the article. Upload `dist/video/thumbnail.png`, which `node tools/video/thumbnail.mjs` draws, as the thumbnail. Then put the link in the store listing's promo video field and in the README.
+- Upload to YouTube under an account you're happy to have public, then put the link in the store listing's promo video field and in the README.
+
+### On YouTube
+
+The 1.0 video is https://youtu.be/nAt9-FO5FM4, public. A new recording needs new chapter times, from the shot list.
+
+- **Title:** Tolk: a Chrome extension for reading in the language you're learning
+- **Description:**
+
+  ```
+  Tolk is a free, open source Chrome extension for reading web articles and EPUB books in a language you're learning. It reads the text aloud and highlights each word as it's spoken, translates a word or a whole paragraph without hiding the original, keeps the words you save, and shows your reading as a calendar and an aquarium.
+
+  Everything runs on your own computer, using Chrome's built-in AI. There's no account, no analytics, and Tolk makes no network requests of its own.
+
+  0:00 Open an article in Tolk
+  0:11 Read-along with word highlighting
+  0:26 Slower speeds
+  0:39 Translate a word or a paragraph
+  0:58 Your library and reading aquarium
+
+  Source code and privacy policy: https://github.com/kurtcebe/tolk
+  Report a problem: https://github.com/kurtcebe/tolk/issues
+
+  Needs Chrome 138 or later on a desktop computer.
+
+  Article shown: "Stroopwafel", Dutch Wikipedia, https://nl.wikipedia.org/wiki/Stroopwafel, licensed CC BY-SA 4.0.
+  Music: original, made for this video.
+  ```
+
+  The timestamps make YouTube show chapters, which must be at least 10 seconds each. Once the store listing is published, add its link to the description.
+- **Thumbnail:** `dist/video/thumbnail.png`, drawn by `npx tsc && node tools/video/thumbnail.mjs`. Custom thumbnails need the channel to be verified by phone.
+- **Subtitles:** `dist/video/tolk-intro.srt`, as English. Video language English, caption certification None.
+- **Tags:** Tolk, language learning, Chrome extension, read aloud, text to speech, learn Dutch, Dutch, reading practice, extensive reading, graded reading, EPUB reader, translate, on-device AI, Chrome built-in AI, privacy, open source, Anki, vocabulary, comprehensible input, language learning tools
+- **Audience:** not made for kids. **Category:** Education or Science & Technology. **Visibility:** public.
 
 ### The generated video, unfinished
 
