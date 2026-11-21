@@ -173,6 +173,7 @@ A separate full page in the same style and colour scheme.
 - **Opening:** clicking a book resumes where the reader left off.
 - **Import:** the button, or a file dropped anywhere on the page. A card appears straight away showing "Importing…".
 - **No cover:** a plain generated cover showing the title.
+- **Book colour:** a book that has been read has a small dot in its aquarium colour on its cover (see Aquarium). The dot is drawn over the cover, so the card's layout doesn't change.
 - **Empty:** a large drop area, the import button and the notice.
 - **Delete:** a `⋯` menu on the card, with confirmation on the card itself: "Delete this book and your reading position?" Saved words from that book stay.
 
@@ -189,34 +190,47 @@ A section above "Your books", hidden until there's a day with history. The aquar
 - **Days:** each day is shaded in one of four levels, from none to a lot, scaled to the month's busiest day, so a light reader's calendar fills in as much as a heavy one's. Today has a ring. A day under a minute shows as none. Each day's accessible name says the date and its time, such as "12 November, 34 minutes".
 - **Chosen day:** today, until another day is chosen. Below the calendar, its time and words per language, such as "Dutch · 34 min · 4,120 words", and the titles of the books read that day. A live article shows as "Articles", without its title.
 - **Month total:** time and words for the month shown, across all languages.
-- **Clear reading history:** a quiet button at the end of the section, with confirmation inline: "Clear all your reading history? Your books and saved words stay." Clearing hides the section, and empties the aquarium of fish, plants and shells.
+- **Clear reading history:** a quiet button at the end of the section, with confirmation inline: "Clear all your reading history? Your books and saved words stay." Clearing hides the section, empties the aquarium of fish, plants and shells, and forgets book colours and language shapes, so the cover dots go too.
 
 ### Aquarium
 
 A tank of water the full width of the section and 200 px tall, showing the last 30 days at a glance. It's drawn on one canvas, and it never moves anything else on the page.
 
 - **Fish:** one for each day in the last 30, today included, with at least a minute of reading. A day's fish leaves once the day is more than 30 days old, so a reader who reads every day keeps 30 fish. A new fish for today appears the next time the library opens or is shown again.
-- **Fish colour:** books and live articles each have a colour. A day with both gets a two-colour fish, the head in one colour and the tail in the other, split along the body by each one's share of that day's time; a source under 10% of the day is left out, so a split is always visible. How strong the colour is follows the day's time: pale at 1 minute, rising to full at 60 minutes, and full beyond that. The scale is fixed, so a fish keeps its colour for its whole life.
-- **Depth:** three layers. Back fish are smaller, slower and hazier, middle fish are the normal size, and front fish are larger and pass in front of everything except the front plants. Each fish is given a layer when it appears and keeps it.
+- **Fish colour is the book:** each book has a colour from a palette of 8 (see the table below). A book takes the next unused colour the first time it's read, and keeps it. The colour belongs to reading history, so it outlives the book and only clearing reading history removes it. After 8 books, the colours repeat in the same order.
+- **Articles are silver:** live articles share one silver colour, outside the book palette. A silver fish shimmers slowly, its colour brightening and dimming over about 4 seconds, each fish at its own point in the cycle.
+- **Two sources at most:** a day's fish shows its two largest sources by share of the day's time, the larger as the head and the other as the tail, split along the body by their shares of the two. A source under 10% of the day is left out, so a split is always visible. Each book is its own source, and all articles together are one.
+- **Full colour:** every fish is drawn in its full colour, however long the day was. The calendar already shows long and short days.
+- **Fish shape is the language:** there are three shapes. An oval fish, a tall round fish like an angelfish, and a long slim fish like a minnow. A day's fish takes the shape of the language read longest that day. A language gets its shape the first time it has a fish, and keeps it. The first three languages take one shape each, in that order. A fourth or later language takes the shape of whichever language with a shape was read least in the 30 days up to that fish's day. Shapes belong to reading history, and clearing it removes them.
+- **Depth:** three layers. Back fish are smaller, slower and hazier, middle fish are the normal size, and front fish are larger and pass in front of everything except the front plants. Each fish is given a layer when it appears and keeps it. Back haze is light, 15% towards the water, so a back fish still reads as its book's colour.
+- **Highlight:** pointing at or focusing a book card highlights that book's fish: the other fish fade 70% towards the water, and the book's fish keep their full colour and gain a thin light outline. A fish where the book is the tail is highlighted too. The change eases in and out over 200 ms, and happens at once under reduced motion. Moving off the card, or focus leaving it, ends the highlight. The cards aren't over the tank, so this never conflicts with fish fleeing the pointer.
 - **Swimming:** each fish swims in long, unhurried runs, turning before it reaches the glass. Fish flee a pointer that comes near them, then go back to swimming. A fish only ever faces the way it's going.
 - **Plants:** grow from the floor, at the back and the front, with the streak (see What counts). Nothing at 0 or 1 days, a sprout at 3, a full plant at 7, a second at 14, and a full tank at 30. Between those points they grow a little each day. When a streak breaks, they shrink back a stage a day rather than vanishing, so a missed day costs little. They sway gently.
 - **Bubbles:** rise from the floor, more often the more words were saved in the last 30 days. None when no words were saved, and the rate stops rising at 100 words.
 - **Shells:** one rests on the floor for each book ever finished, in the order they were finished. A shell stays when its book is removed from the library, and only clearing reading history removes it. Past 30 shells, the floor holds 30 and the count line still gives the full number.
 - **Count line:** under the tank, in muted text, such as "18 fish · 5-day streak · 42 words saved · 2 books finished". Parts that are zero are left out, except fish. The same line is the tank's accessible name, so a screen reader hears it instead of the picture.
 - **No fish:** when there's older history but no reading in the last 30 days, the tank has water, any remaining plants and the shells, and the count line reads "No fish yet. Read for a minute today to add one."
-- **Reduced motion:** with `prefers-reduced-motion`, the tank is drawn once and stays still: fish where they are, no bubbles, no swaying, no flicker in the light.
+- **Reduced motion:** with `prefers-reduced-motion`, the tank is drawn once and stays still: fish where they are, no bubbles, no swaying, no flicker in the light, no shimmer on silver fish. A highlight redraws it once.
 - **Off screen:** the tank stops drawing while it's scrolled out of view or the tab is hidden.
 - **Light:** two soft rays of light fall from the surface and flicker slowly. The water's colour shifts gently from top to bottom.
+- **Cover dot:** a book with a colour has a 10 px dot in that colour on its library card, inset 6 px from the cover's top-right corner, with a 2 px ring in the card's background colour so it shows on any cover. A book that has never been read has no colour yet, and no dot.
 
-Colours, per scheme. Water is a top-to-bottom gradient; the fish colours are at full strength and fade towards the water's own colour at less time. These were chosen without seeing them on the page, so check them by eye in each scheme.
+Colours, per scheme. Water is a top-to-bottom gradient. Books take colours 1 to 8 in order. These were chosen without seeing them on the page, so check them by eye in each scheme, including that the 8 book colours and silver are told apart on the water.
 
 | Token | Light | Sepia | Dark | Dim |
 | --- | --- | --- | --- | --- |
 | Water, top | `#CFE3EE` | `#D6DFD2` | `#1C3346` | `#253847` |
 | Water, bottom | `#7FA9C4` | `#93A99E` | `#0F1C28` | `#18242E` |
 | Floor | `#D9CBAE` | `#C9B48F` | `#2B2A26` | `#34332E` |
-| Book fish | `#E07A2E` | `#C8692A` | `#F0A060` | `#D9955E` |
-| Article fish | `#1F8A86` | `#2A7C73` | `#5CC8BE` | `#6BB3AB` |
+| Book 1, orange | `#E07A2E` | `#C8692A` | `#F0A060` | `#D9955E` |
+| Book 2, red | `#C8344A` | `#B23A44` | `#F07080` | `#D47884` |
+| Book 3, yellow | `#D9A81E` | `#C49A2A` | `#F2CF5B` | `#D6BB62` |
+| Book 4, violet | `#7B4FB8` | `#74539E` | `#B79AF0` | `#A592D2` |
+| Book 5, green | `#3E9A4C` | `#4F8A45` | `#78C878` | `#7DB27B` |
+| Book 6, pink | `#D45A9E` | `#B85A8A` | `#F08CC8` | `#D38DB6` |
+| Book 7, brown | `#8A5A2B` | `#85583A` | `#C99A6E` | `#B89474` |
+| Book 8, blue | `#2F5FB0` | `#3E5E95` | `#7FA8F0` | `#8AA4D6` |
+| Article, silver | `#8E9BA6` | `#9A9F98` | `#C8D2DA` | `#B4BCC2` |
 | Plant | `#4E8A4A` | `#5B7D45` | `#4F8C5A` | `#577A5C` |
 | Shell | `#F3E6D8` | `#F1E2C8` | `#C9B9A6` | `#B5A897` |
 
