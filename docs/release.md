@@ -28,7 +28,7 @@ How a version gets from `main` to the Chrome Web Store, and the listing text to 
 4. Choose *Submit for review*, and **untick publishing automatically** in the confirm dialog. After review, there are 30 days to publish before the submission goes back to draft.
 5. When it passes, install the staged version in a fresh profile if the dashboard offers it, then publish.
 6. After publishing, install from the store in a fresh profile and check that the capability stub is ignored: in a reader tab's console, `chrome.storage.local.set({ capabilityStub: { translator: "unavailable" } })` and a reload should change nothing.
-7. Tag the published commit as `v<version>` and push the tag. The tag waits until now because review may ask for changes, and the tag should mark what's in the store. On the first release, also add the store link to the README.
+7. Tag the published commit as `v<version>` and push the tag. The tag waits until now because review may ask for changes, and the tag should mark what's in the store. On the first release, also add the store link to the README and to the YouTube video's description.
 
 Review usually takes a few days and sometimes a few weeks. New developers and new extensions get a closer look. If it's pending for more than three weeks, contact developer support. A rejection email names the policy it broke and how to appeal.
 
@@ -84,7 +84,7 @@ All images use our own artwork, and only public domain or properly licensed text
 | Screenshots | 1280 × 800, square corners, no padding. Up to 5 | At least 1 | Cut from the video's recording: read-along, a word's translation, interlinear translation, the aquarium and calendar, and the books. See below |
 | Small promo tile | 440 × 280 PNG or JPEG | No, but items without one are listed after items with one | The aquarium in the light scheme with Tolk's icon, and no text. See below |
 | Marquee | 1400 × 560 | Only to be featured there | Skip for now |
-| Video | A YouTube link | No | See below |
+| Video | A YouTube link, in the promo video field | No | https://youtu.be/nAt9-FO5FM4, see below |
 
 ### Making the images
 
@@ -229,7 +229,7 @@ It draws the cards and captions in a headless Chrome with Tolk's own fonts, leve
 ### Before uploading
 
 - Watch it all the way through with sound: the highlight and voice in sync, no first-run card, no developer-mode banner, no notifications, and nothing from your own profile.
-- Upload to YouTube under an account you're happy to have public, with the `.srt` as English captions. Put the article credit in the description: "Stroopwafel", Dutch Wikipedia, CC BY-SA 4.0, with a link to the article. Then add the link to the store listing.
+- Upload to YouTube under an account you're happy to have public, with the `.srt` as English captions. Put the article credit in the description: "Stroopwafel", Dutch Wikipedia, CC BY-SA 4.0, with a link to the article. Upload `dist/video/thumbnail.png`, which `node tools/video/thumbnail.mjs` draws, as the thumbnail. Then put the link in the store listing's promo video field and in the README.
 
 ### The generated video, unfinished
 
