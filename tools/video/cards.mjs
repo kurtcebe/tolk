@@ -37,24 +37,33 @@ export function titleCardHtml(heading, line) {
   );
 }
 
-export function closingCardHtml(heading, line) {
+export function closingCardHtml(heading, line, credit = "") {
   return page(
     `body { background: #fbf8f1; color: #25231e; display: grid; place-content: center; text-align: center; gap: 24px; }
      img { width: 72px; height: 72px; margin: 0 auto 8px; }
      h1 { font: 600 52px/1.2 "Literata", serif; max-width: 980px; }
-     p { font: 400 28px/1.35 "Instrument Sans", sans-serif; color: #1f4e79; }`,
-    `<img src="/icons/icon.svg" alt=""><h1>${escape(heading)}</h1><p>${escape(line)}</p>`,
+     p { font: 400 28px/1.35 "Instrument Sans", sans-serif; color: #1f4e79; }
+     small { position: fixed; left: 0; right: 0; bottom: 36px; font: 400 18px/1.3 "Instrument Sans", sans-serif; color: #625d52; }`,
+    `<img src="/icons/icon.svg" alt=""><h1>${escape(heading)}</h1><p>${escape(line)}</p>${credit ? `<small>${escape(credit)}</small>` : ""}`,
   );
 }
 
 /** A caption on a transparent background, sized to the whole frame's width. */
-export function captionHtml(text) {
+export function captionHtml(text, align = "center") {
   return page(
     `html, body { background: transparent; }
-     body { display: flex; align-items: center; justify-content: center; }
+     body { display: flex; align-items: center; justify-content: ${align === "right" ? "flex-end" : "center"}; padding: 0 48px; }
      span { font: 500 28px/1.25 "Instrument Sans", sans-serif; color: #fffdf8;
        background: rgba(31, 78, 121, 0.94); padding: 14px 30px; border-radius: 999px;
        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); }`,
     `<span>${escape(text)}</span>`,
+  );
+}
+
+/** The pointer for the opening shot, drawn like the one in the page. */
+export function pointerHtml() {
+  return page(
+    `html, body { background: transparent; }`,
+    `<svg viewBox="0 0 24 24" width="26" height="26" style="display:block"><path d="M4 2.5 L4 19 L8.6 14.8 L11.6 21.5 L14.3 20.3 L11.4 13.8 L17.6 13.6 Z" fill="#1b1a17" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
   );
 }
