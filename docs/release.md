@@ -65,6 +65,8 @@ A new publisher can have at most two published extensions until they ask for mor
 > What it needs: Chrome 138 or later on a desktop computer. Translation depends on your computer and the language pair, and Chrome downloads a language pack, about 80 MB, the first time you ask. Read-along needs a voice for the language. Languages written right to left aren't supported yet.
 >
 > Tolk is free and open source, under the Apache 2.0 licence.
+>
+> The screenshots and video show the Dutch Wikipedia article “Stroopwafel”, under CC BY-SA 4.0.
 
 **Category:** Education, if the dashboard still has it. **Language:** English.
 
@@ -79,10 +81,27 @@ All images use our own artwork, and only public domain or properly licensed text
 | Image | Size | Needed | Plan |
 | --- | --- | --- | --- |
 | Store icon | 128 × 128 PNG, 96 px of artwork with 16 px transparent padding | Yes, inside the zip | `extension/icons/icon-128.png` |
-| Screenshots | 1280 × 800, square corners, no padding. Up to 5 | At least 1 | Read-along in progress, the word popup with interlinear translation, saved words, the library with the aquarium and calendar, Book mode |
-| Small promo tile | 440 × 280 PNG or JPEG | No, but items without one are listed after items with one | Icon and aquarium, with little or no text |
+| Screenshots | 1280 × 800, square corners, no padding. Up to 5 | At least 1 | Cut from the video's recording: read-along, a word's translation, interlinear translation, the aquarium and calendar, and the books. See below |
+| Small promo tile | 440 × 280 PNG or JPEG | No, but items without one are listed after items with one | The aquarium in the light scheme with Tolk's icon, and no text. See below |
 | Marquee | 1400 × 560 | Only to be featured there | Skip for now |
 | Video | A YouTube link | No | See below |
+
+### Making the images
+
+Both scripts write to `dist/store/`.
+
+**Screenshots** are cut from the raw OBS recording, which has no captions, so they show the same article as the video. The last line of the description credits it. `dist/video/edit.json` lists them next to the cuts:
+
+```json
+"screenshots": [
+  { "name": "1-read-along", "at": 20.5, "crop": [520, 106, 1400, 875] },
+  { "name": "4-aquarium", "at": 56.5, "crop": [320, 160, 1280, 800] }
+]
+```
+
+`at` is the moment in the recording, in seconds, and `crop` is the part of the 1920 × 1080 frame to keep, as x, y, width and height. It must be 16:10, which leaves out Chrome's toolbar. A 1400 × 875 crop fits the reader's text and its controls and is scaled down to 1280 × 800. The library is narrower, so it's kept at 1280 × 800 with no scaling. Then run `node tools/video/screenshots.mjs`. Look at each one at full size, because the recording is compressed and the pointer is in it.
+
+**The promo tile** is drawn by the extension's own `aquarium.js` in a headless Chrome, with made-up reading days, so it's sharp instead of being cut from the video. Run `npx tsc && node tools/video/promo-tile.mjs`. A number after it, such as `3`, places the fish differently.
 
 ## Privacy tab
 
