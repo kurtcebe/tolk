@@ -79,6 +79,8 @@ const captions = spec.captions.map((caption, i) => ({
 }));
 writeFileSync(join(OUT, "tolk-intro.srt"), srt(captions));
 
+console.log("Making the music");
+const music = spec.music ?? makeMusic(totalSeconds);
 console.log("Encoding");
 encode();
 console.log(`Wrote ${join(OUT, "tolk-intro.mp4")} (${totalSeconds.toFixed(1)} s) and tolk-intro.srt`);
@@ -148,6 +150,35 @@ async function renderImages() {
   }
 }
 
+/**
+ * A quiet, original piece, so there are no rights to clear: a slow pad over
+ * C, A minor, F and G, four seconds a chord, with a soft arpeggio on top.
+ */
+function makeMusic(seconds) {
+  const chords = [
+    [130.81, 261.63, 329.63, 392.0],
+    [110.0, 220.0, 261.63, 329.63],
+    [87.31, 174.61, 220.0, 261.63],
+    [98.0, 196.0, 246.94, 293.66],
+  ];
+  const pick = (note) => chords.reduceRight((rest, chord, i) => `if(eq(ld(0),${i}),${chord[note]},${rest})`, "0");
+  // ld(0) is the chord, ld(1) the time into it, ld(2) the arpeggio note.
+  const setup = "st(0,mod(floor(t/4),4))+st(1,mod(t,4))+st(2,mod(floor(t*2),4))";
+  const swell = "(1-exp(-ld(1)*1.5))*(0.6+0.4*exp(-ld(1)*0.4))";
+  const pad = [0, 1, 2, 3].map((n) => `sin(2*PI*${pick(n)}*t)*${n === 0 ? 0.5 : 0.3}`).join("+");
+  const arpNote = `if(eq(ld(2),0),${pick(1)},if(eq(ld(2),1),${pick(2)},if(eq(ld(2),2),${pick(3)},${pick(2)})))*2`;
+  const arp = `sin(2*PI*${arpNote}*t)*exp(-mod(t,0.5)*5)*0.25`;
+  const expression = `(${setup})*0+(${pad})*${swell}*0.18+${arp}`;
+  const file = join(WORK, "music.wav");
+  execFileSync(ffmpeg, [
+    "-hide_banner", "-loglevel", "error", "-y",
+    "-f", "lavfi", "-i", `aevalsrc=exprs='${expression}|${expression}':s=48000:d=${seconds.toFixed(3)}`,
+    "-af", "lowpass=f=2400,aecho=0.8:0.6:180|340:0.3|0.2,volume=0.7",
+    "-ar", "48000", "-ac", "2", file,
+  ]);
+  return file;
+}
+
 function srt(list) {
   const stamp = (s) => {
     const ms = Math.round(s * 1000);
@@ -196,8 +227,17 @@ function encode() {
     last = `o${i}`;
   });
   filters.push(`[${last}]fade=t=in:st=0:d=0.6,fade=t=out:st=${(totalSeconds - 0.8).toFixed(3)}:d=0.8[out]`);
-  // Level the voice to YouTube's usual loudness, without peaks reaching 0 dB.
-  filters.push(`[sound]loudnorm=I=-16:TP=-1.5:LRA=11[audio]`);
+  // Level the voice to YouTube's usual loudness. The music sits well under it
+  // and ducks out whenever the voice speaks, then comes back in the pauses.
+  const musicInput = 5 + captions.length;
+  inputs.push("-stream_loop", "-1", "-i", music);
+  filters.push(
+    `[sound]loudnorm=I=-16:TP=-2:LRA=11,asplit=2[voice][key]`,
+    `[${musicInput}:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:${totalSeconds.toFixed(3)},volume=-1dB,` +
+      `afade=t=in:d=1.5,afade=t=out:st=${(totalSeconds - 2.5).toFixed(3)}:d=2.5[bed]`,
+    `[bed][key]sidechaincompress=threshold=0.008:ratio=20:attack=60:release=900:makeup=1[ducked]`,
+    `[voice][ducked]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.89[audio]`,
+  );
 
   execFileSync(ffmpeg, [
     "-hide_banner", "-loglevel", "error", "-stats", "-y",
