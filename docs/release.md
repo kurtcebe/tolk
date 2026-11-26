@@ -53,6 +53,8 @@ A new publisher can have at most two published extensions until they ask for mor
 
 **Name:** Tolk
 
+**Listing:** https://chromewebstore.google.com/detail/tolk/mlbhnfjjempgjpgaabkjfajddabipfai
+
 **Summary,** from the manifest's `description`: Read real articles and books in the language you're learning, with everything running on your own machine.
 
 **Description:**
@@ -266,6 +268,7 @@ The 1.0 video is https://youtu.be/nAt9-FO5FM4, public. A new recording needs new
   0:39 Translate a word or a paragraph
   0:58 Your library and reading aquarium
 
+  Install from the Chrome Web Store: https://chromewebstore.google.com/detail/tolk/mlbhnfjjempgjpgaabkjfajddabipfai
   Source code and privacy policy: https://github.com/kurtcebe/tolk
   Report a problem: https://github.com/kurtcebe/tolk/issues
 
@@ -275,7 +278,7 @@ The 1.0 video is https://youtu.be/nAt9-FO5FM4, public. A new recording needs new
   Music: original, made for this video.
   ```
 
-  The timestamps make YouTube show chapters, which must be at least 10 seconds each. Once the store listing is published, add its link to the description.
+  The timestamps make YouTube show chapters, which must be at least 10 seconds each. The store link went in after the listing was published.
 - **Thumbnail:** `dist/video/thumbnail.png`, drawn by `npx tsc && node tools/video/thumbnail.mjs`. Custom thumbnails need the channel to be verified by phone.
 - **Subtitles:** `dist/video/tolk-intro.srt`, as English. Video language English, caption certification None.
 - **Tags:** Tolk, language learning, Chrome extension, read aloud, text to speech, learn Dutch, Dutch, reading practice, extensive reading, graded reading, EPUB reader, translate, on-device AI, Chrome built-in AI, privacy, open source, Anki, vocabulary, comprehensible input, language learning tools
