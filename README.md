@@ -37,13 +37,17 @@ Languages written right to left, such as Arabic and Hebrew, aren't supported yet
 
 ## Install
 
-Load it unpacked from source:
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/tolk/mlbhnfjjempgjpgaabkjfajddabipfai).
+
+Then open an article and click Tolk's toolbar icon, or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>. Help, from the settings in the reader, explains the rest.
+
+### From source
+
+To run your own build instead, load it unpacked:
 
 1. Build it, as described below.
 2. Open `chrome://extensions` and turn on Developer mode.
 3. Choose *Load unpacked* and select the `extension/` folder.
-
-Then open an article and click Tolk's toolbar icon, or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>. Help, from the settings in the reader, explains the rest.
 
 ## Privacy
 
